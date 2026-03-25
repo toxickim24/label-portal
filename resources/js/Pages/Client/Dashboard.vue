@@ -1,5 +1,6 @@
 <script setup>
 import ClientLayout from '@/Layouts/ClientLayout.vue';
+import ClientActivityFeed from '@/Components/ClientActivityFeed.vue';
 import { Head } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
@@ -126,6 +127,21 @@ const greeting = computed(() => {
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity Feed -->
+                <div class="mb-6 overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                Recent Activity
+                            </h3>
+                            <span class="text-sm text-gray-500 dark:text-gray-400">
+                                Last 10 activities
+                            </span>
+                        </div>
+                        <ClientActivityFeed :activities="activities" :limit="5" />
                     </div>
                 </div>
 

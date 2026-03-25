@@ -28,11 +28,38 @@ class ContactNoteService
         // Update last contact date
         $contact->update(['last_contact_date' => now()]);
 
-        return $contact->notes()->create([
+        $note = $contact->notes()->create([
             'user_id' => auth()->id(),
             'content' => $data['content'],
             'is_pinned' => $data['is_pinned'] ?? false,
         ]);
+
+        // Create client activity and notification if this contact has an associated client user
+        if ($contact->email) {
+            $clientUser = \App\Models\User::where('email', $contact->email)
+                ->whereHas('roles', function ($query) {
+                    $query->where('name', 'client');
+                })
+                ->first();
+
+            if ($clientUser) {
+                // Log activity
+                app(\App\Services\ClientActivityService::class)->logAgentNote(
+                    $clientUser,
+                    $note->id,
+                    auth()->user()->name
+                );
+
+                // Create notification
+                app(\App\Services\ClientNotificationService::class)->notifyAgentNote(
+                    $clientUser,
+                    $note->id,
+                    auth()->user()->name
+                );
+            }
+        }
+
+        return $note;
     }
 
     /**

@@ -94,12 +94,24 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'approve
 // Client Portal Routes (protected)
 Route::prefix('client')->name('client.')->middleware(['auth', 'verified', 'approved', 'role:client'])->group(function () {
     Route::get('/dashboard', function () {
-        return Inertia::render('Client/Dashboard');
+        $activities = auth()->user()->clientActivities()->recent(10)->get();
+
+        return Inertia::render('Client/Dashboard', [
+            'activities' => $activities,
+        ]);
     })->name('dashboard');
 
-    Route::get('/profile', function () {
-        return Inertia::render('Client/Profile');
-    })->name('profile');
+    // Client Profile
+    Route::get('/profile', [\App\Http\Controllers\Client\ProfileController::class, 'show'])->name('profile');
+    Route::patch('/profile', [\App\Http\Controllers\Client\ProfileController::class, 'update'])->name('profile.update');
+    Route::patch('/profile/password', [\App\Http\Controllers\Client\ProfileController::class, 'updatePassword'])->name('profile.password');
+
+    // Client Notifications
+    Route::get('/notifications', [\App\Http\Controllers\Client\NotificationController::class, 'index'])->name('notifications');
+    Route::get('/notifications/recent', [\App\Http\Controllers\Client\NotificationController::class, 'recent'])->name('notifications.recent');
+    Route::post('/notifications/{notification}/read', [\App\Http\Controllers\Client\NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/read-all', [\App\Http\Controllers\Client\NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+    Route::delete('/notifications/{notification}', [\App\Http\Controllers\Client\NotificationController::class, 'destroy'])->name('notifications.destroy');
 });
 
 require __DIR__.'/auth.php';

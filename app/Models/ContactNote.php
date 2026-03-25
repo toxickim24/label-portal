@@ -17,11 +17,21 @@ class ContactNote extends Model
         'user_id',
         'content',
         'is_pinned',
+        'is_visible_to_client',
     ];
 
     protected $casts = [
         'is_pinned' => 'boolean',
+        'is_visible_to_client' => 'boolean',
     ];
+
+    /**
+     * Scope to get notes visible to client
+     */
+    public function scopeVisibleToClient($query)
+    {
+        return $query->where('is_visible_to_client', true);
+    }
 
     /**
      * Get the contact that owns this note.

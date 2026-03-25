@@ -123,6 +123,14 @@ class UserService
             'approved_by' => $approver->id,
         ]);
 
+        // Send approval notification email
+        \Illuminate\Support\Facades\Mail::to($user->email)->send(
+            new \App\Mail\UserApprovedMail(
+                user: $user,
+                approver: $approver
+            )
+        );
+
         return $user->fresh();
     }
 

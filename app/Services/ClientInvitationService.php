@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
+use App\Mail\ClientInvitationMail;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
@@ -48,7 +49,7 @@ class ClientInvitationService
     /**
      * Send invitation email
      */
-    protected function sendInvitationEmail(User $client, string $token): void
+    protected function sendInvitationEmail(User $client, string $token, bool $isResend = false): void
     {
         $invitationUrl = URL::temporarySignedRoute(
             'client.invitation.accept',
@@ -56,9 +57,19 @@ class ClientInvitationService
             ['token' => $token]
         );
 
-        // TODO: Create proper email template
-        // For now, we'll just log the URL
-        logger()->info("Client invitation URL for {$client->email}: {$invitationUrl}");
+        Mail::to($client->email)->send(
+            new ClientInvitationMail(
+                clientName: $client->name,
+                invitationUrl: $invitationUrl,
+                isResend: $isResend
+            )
+        );
+
+        // Also log for debugging purposes
+        logger()->info("Client invitation email sent to {$client->email}", [
+            'client_id' => $client->id,
+            'is_resend' => $isResend,
+        ]);
     }
 
     /**
@@ -77,6 +88,7 @@ class ClientInvitationService
             'password' => Hash::make($password),
             'invitation_accepted_at' => now(),
             'invitation_token' => null, // Clear the token
+            'email_verified_at' => now(), // Mark email as verified
         ]);
 
         // Log activity
@@ -104,8 +116,8 @@ class ClientInvitationService
             'invitation_sent_at' => now(),
         ]);
 
-        // Send invitation email
-        $this->sendInvitationEmail($client, $token);
+        // Send invitation email with resend flag
+        $this->sendInvitationEmail($client, $token, isResend: true);
 
         // Log activity
         activity()

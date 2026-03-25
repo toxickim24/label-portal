@@ -161,10 +161,39 @@ class ContactService
      */
     public function updateStatus(Contact $contact, string $status): Contact
     {
+        $oldStatus = $contact->status;
+
         $contact->update([
             'status' => $status,
             'last_contact_date' => now(),
         ]);
+
+        // Create client activity and notification if status changed and contact has client user
+        if ($oldStatus !== $status && $contact->email) {
+            $clientUser = \App\Models\User::where('email', $contact->email)
+                ->whereHas('roles', function ($query) {
+                    $query->where('name', 'client');
+                })
+                ->first();
+
+            if ($clientUser) {
+                // Log activity
+                app(\App\Services\ClientActivityService::class)->logStatusChange(
+                    $clientUser,
+                    $oldStatus,
+                    $status,
+                    auth()->user()->name
+                );
+
+                // Create notification
+                app(\App\Services\ClientNotificationService::class)->notifyStatusChange(
+                    $clientUser,
+                    $oldStatus,
+                    $status,
+                    auth()->user()->name
+                );
+            }
+        }
 
         return $contact->fresh();
     }
@@ -174,11 +203,26 @@ class ContactService
      */
     public function assignContact(Contact $contact, int $userId): Contact
     {
+        $previousAssignee = $contact->assigned_to;
+
         $contact->update([
             'assigned_to' => $userId,
         ]);
 
-        return $contact->fresh(['assignedUser']);
+        $contact->load(['assignedUser']);
+
+        // Send email notification to the new assignee (only if changed)
+        if ($previousAssignee !== $userId && $contact->assignedUser) {
+            \Illuminate\Support\Facades\Mail::to($contact->assignedUser->email)->send(
+                new \App\Mail\ContactAssignedMail(
+                    contact: $contact,
+                    agent: $contact->assignedUser,
+                    assignedBy: auth()->user()
+                )
+            );
+        }
+
+        return $contact;
     }
 
     /**

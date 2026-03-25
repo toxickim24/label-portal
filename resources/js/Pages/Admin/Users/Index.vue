@@ -47,6 +47,26 @@ const getStatusText = (user) => {
     return 'Active';
 };
 
+const getRoleBadgeClass = (role) => {
+    if (role === 'client') {
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400';
+    }
+    if (role === 'admin') {
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400';
+    }
+    return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400';
+};
+
+const hasRole = (user, role) => {
+    return user.roles.some(r => r.name === role);
+};
+
+const resendInvitation = (userId) => {
+    if (confirm('Are you sure you want to resend the invitation?')) {
+        router.post(route('admin.users.resend-invitation', userId));
+    }
+};
+
 const approveUser = (userId) => {
     if (confirm('Are you sure you want to approve this user?')) {
         router.post(route('admin.users.approve', userId));
@@ -264,9 +284,14 @@ const deleteUser = (userId) => {
                                         </div>
                                     </td>
                                     <td class="whitespace-nowrap px-6 py-4">
-                                        <span class="inline-flex rounded-full bg-indigo-100 px-2 text-xs font-semibold leading-5 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400">
-                                            {{ user.roles[0]?.name || 'No Role' }}
-                                        </span>
+                                        <div class="flex flex-col gap-1">
+                                            <span :class="getRoleBadgeClass(user.roles[0]?.name)" class="inline-flex rounded-full px-2 text-xs font-semibold leading-5">
+                                                {{ user.roles[0]?.name || 'No Role' }}
+                                            </span>
+                                            <span v-if="hasRole(user, 'client') && user.invitation_token" class="inline-flex rounded-full bg-yellow-100 px-2 text-xs font-semibold leading-5 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">
+                                                Pending Invitation
+                                            </span>
+                                        </div>
                                     </td>
                                     <td class="whitespace-nowrap px-6 py-4">
                                         <span :class="getStatusBadgeClass(user)" class="inline-flex rounded-full px-2 text-xs font-semibold leading-5">
@@ -312,6 +337,13 @@ const deleteUser = (userId) => {
                                                 class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
                                             >
                                                 Unsuspend
+                                            </button>
+                                            <button
+                                                v-if="!user.deleted_at && hasRole(user, 'client') && user.invitation_token"
+                                                @click="resendInvitation(user.id)"
+                                                class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                                            >
+                                                Resend Invite
                                             </button>
                                             <button
                                                 v-if="user.deleted_at"

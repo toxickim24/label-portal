@@ -34,6 +34,7 @@ class User extends Authenticatable
         'invitation_token',
         'invitation_sent_at',
         'invitation_accepted_at',
+        'email_verified_at',
     ];
 
     /**
@@ -159,5 +160,23 @@ class User extends Authenticatable
     public function clientActivities()
     {
         return $this->hasMany(ClientActivity::class);
+    }
+
+    /**
+     * Send the password reset notification.
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $resetUrl = url(route('password.reset', [
+            'token' => $token,
+            'email' => $this->email,
+        ], false));
+
+        \Illuminate\Support\Facades\Mail::to($this->email)->send(
+            new \App\Mail\PasswordResetMail(
+                resetUrl: $resetUrl,
+                userName: $this->name
+            )
+        );
     }
 }
