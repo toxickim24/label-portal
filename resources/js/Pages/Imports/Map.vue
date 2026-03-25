@@ -4,7 +4,7 @@ import { Head, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 const props = defineProps({
-    import: Object,
+    importRecord: Object,
     preview: Object,
     availableFields: Object,
 });
@@ -15,7 +15,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post(route('imports.process', props.import.id));
+    form.post(route('imports.process', props.importRecord.id));
 };
 </script>
 
@@ -35,7 +35,7 @@ const submit = () => {
                     <div class="p-6">
                         <div class="mb-6">
                             <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-                                File: {{ import.original_filename }}
+                                File: {{ importRecord.original_filename }}
                             </h3>
                             <p class="text-sm text-gray-600 dark:text-gray-400">
                                 Total rows to import: {{ preview.total_rows }}

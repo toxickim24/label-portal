@@ -92,7 +92,7 @@ class ImportController extends Controller
         ];
 
         return Inertia::render('Imports/Map', [
-            'import' => $import,
+            'importRecord' => $import,
             'preview' => $preview,
             'availableFields' => $availableFields,
         ]);
@@ -136,7 +136,7 @@ class ImportController extends Controller
         $statistics = $this->importService->getStatistics($import);
 
         return Inertia::render('Imports/Show', [
-            'import' => $import,
+            'importRecord' => $import,
             'statistics' => $statistics,
             'errors' => $import->errors()->paginate(10),
         ]);

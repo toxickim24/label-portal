@@ -3,7 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
 
 defineProps({
-    import: Object,
+    importRecord: Object,
     statistics: Object,
     errors: Object,
 });
@@ -20,16 +20,16 @@ const getStatusColor = (status) => {
 </script>
 
 <template>
-    <Head :title="`Import #${import.id}`" />
+    <Head :title="`Import #${importRecord.id}`" />
 
     <AuthenticatedLayout>
         <template #header>
             <div class="flex justify-between items-center">
                 <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    Import #{{ import.id }}: {{ import.original_filename }}
+                    Import #{{ importRecord.id }}: {{ importRecord.original_filename }}
                 </h2>
-                <span :class="['px-3 py-1 rounded-full text-xs font-semibold', getStatusColor(import.status)]">
-                    {{ import.status.toUpperCase() }}
+                <span :class="['px-3 py-1 rounded-full text-xs font-semibold', getStatusColor(importRecord.status)]">
+                    {{ importRecord.status.toUpperCase() }}
                 </span>
             </div>
         </template>
@@ -57,7 +57,7 @@ const getStatusColor = (status) => {
                 </div>
 
                 <!--Progress Bar -->
-                <div v-if="import.status === 'processing'" class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
+                <div v-if="importRecord.status === 'processing'" class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
                     <div class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                         Processing... {{ statistics.progress_percentage }}%
                     </div>
@@ -72,7 +72,7 @@ const getStatusColor = (status) => {
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Import Errors</h3>
                             <a
-                                :href="route('imports.failed-rows', import.id)"
+                                :href="route('imports.failed-rows', importRecord.id)"
                                 class="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-900"
                             >
                                 Download Failed Rows
@@ -103,7 +103,7 @@ const getStatusColor = (status) => {
                         Back to Import History
                     </a>
                     <a
-                        v-if="import.status === 'completed' || import.status === 'failed'"
+                        v-if="importRecord.status === 'completed' || importRecord.status === 'failed'"
                         :href="route('contacts.index')"
                         class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700"
                     >
