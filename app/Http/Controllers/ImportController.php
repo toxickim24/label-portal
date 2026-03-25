@@ -175,9 +175,10 @@ class ImportController extends Controller
     {
         $this->authorize('delete', $import);
 
-        // Delete the CSV file
-        if (file_exists(storage_path('app/' . $import->filename))) {
-            unlink(storage_path('app/' . $import->filename));
+        // Delete the CSV file - handle Windows path separators
+        $filePath = storage_path('app' . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $import->filename));
+        if (file_exists($filePath)) {
+            unlink($filePath);
         }
 
         $import->delete();

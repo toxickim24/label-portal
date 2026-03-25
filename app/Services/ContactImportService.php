@@ -41,12 +41,18 @@ class ContactImportService
             throw new Exception('Failed to store CSV file');
         }
 
-        // Full path to the stored file
-        $fullPath = storage_path('app/' . $path);
+        // Full path to the stored file - normalize path separators for Windows
+        $fullPath = storage_path('app' . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $path));
 
         // Validate the stored file
         if (!file_exists($fullPath)) {
-            throw new Exception('File was not stored correctly: ' . $fullPath);
+            // Try alternate path construction
+            $alternatePath = storage_path('app') . DIRECTORY_SEPARATOR . 'imports' . DIRECTORY_SEPARATOR . $filename;
+            if (file_exists($alternatePath)) {
+                $fullPath = $alternatePath;
+            } else {
+                throw new Exception('File was not stored correctly. Tried: ' . $fullPath . ' and ' . $alternatePath);
+            }
         }
 
         $validation = $this->csvParser->validate($fullPath);
@@ -83,7 +89,7 @@ class ContactImportService
      */
     public function getPreview(Import $import, int $limit = 10): array
     {
-        $filePath = storage_path('app/' . $import->filename);
+        $filePath = $this->getImportFilePath($import);
         $preview = $this->csvParser->preview($filePath, $limit);
         $suggestedMapping = $this->csvParser->suggestMapping($preview['headers']);
 
@@ -111,7 +117,7 @@ class ContactImportService
             'mapping' => $mapping,
         ]);
 
-        $filePath = storage_path('app/' . $import->filename);
+        $filePath = $this->getImportFilePath($import);
         $csvData = $this->csvParser->parse($filePath);
 
         $successful = 0;
@@ -281,11 +287,12 @@ class ContactImportService
         ];
 
         $filename = 'contact_import_template_' . time() . '.csv';
-        $path = storage_path('app/templates/' . $filename);
+        $templateDir = storage_path('app' . DIRECTORY_SEPARATOR . 'templates');
+        $path = $templateDir . DIRECTORY_SEPARATOR . $filename;
 
         // Ensure templates directory exists
-        if (!file_exists(storage_path('app/templates'))) {
-            mkdir(storage_path('app/templates'), 0755, true);
+        if (!file_exists($templateDir)) {
+            mkdir($templateDir, 0755, true);
         }
 
         $handle = fopen($path, 'w');
@@ -311,11 +318,12 @@ class ContactImportService
         }
 
         $filename = 'failed_rows_' . $import->id . '_' . time() . '.csv';
-        $path = storage_path('app/exports/' . $filename);
+        $exportDir = storage_path('app' . DIRECTORY_SEPARATOR . 'exports');
+        $path = $exportDir . DIRECTORY_SEPARATOR . $filename;
 
         // Ensure exports directory exists
-        if (!file_exists(storage_path('app/exports'))) {
-            mkdir(storage_path('app/exports'), 0755, true);
+        if (!file_exists($exportDir)) {
+            mkdir($exportDir, 0755, true);
         }
 
         $handle = fopen($path, 'w');
@@ -336,5 +344,18 @@ class ContactImportService
         fclose($handle);
 
         return $path;
+    }
+
+    /**
+     * Get the full file path for an import, handling Windows path separators.
+     *
+     * @param Import $import
+     * @return string
+     */
+    protected function getImportFilePath(Import $import): string
+    {
+        // Normalize path separators for Windows
+        $relativePath = str_replace('/', DIRECTORY_SEPARATOR, $import->filename);
+        return storage_path('app' . DIRECTORY_SEPARATOR . $relativePath);
     }
 }
