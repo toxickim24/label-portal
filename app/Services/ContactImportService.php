@@ -1,0 +1,323 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Contact;
+use App\Models\Import;
+use App\Models\ImportError;
+use Exception;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+
+class ContactImportService
+{
+    protected CSVParserService $csvParser;
+    protected DuplicateDetectionService $duplicateDetector;
+
+    public function __construct(
+        CSVParserService $csvParser,
+        DuplicateDetectionService $duplicateDetector
+    ) {
+        $this->csvParser = $csvParser;
+        $this->duplicateDetector = $duplicateDetector;
+    }
+
+    /**
+     * Upload and validate CSV file.
+     *
+     * @param \Illuminate\Http\UploadedFile $file
+     * @param int $userId
+     * @return Import
+     */
+    public function uploadFile($file, int $userId): Import
+    {
+        // Validate file
+        $validation = $this->csvParser->validate($file->path());
+
+        if (!$validation['valid']) {
+            throw new Exception('Invalid CSV file: ' . implode(', ', $validation['errors']));
+        }
+
+        // Generate unique filename
+        $filename = time() . '_' . $file->getClientOriginalName();
+        $path = $file->storeAs('imports', $filename);
+
+        // Parse CSV to get row count
+        $preview = $this->csvParser->preview(storage_path('app/' . $path), 1);
+
+        // Create import record
+        $import = Import::create([
+            'user_id' => $userId,
+            'filename' => $path,
+            'original_filename' => $file->getClientOriginalName(),
+            'total_rows' => $preview['total_rows'],
+            'status' => 'pending',
+        ]);
+
+        return $import;
+    }
+
+    /**
+     * Get preview of CSV data with suggested mapping.
+     *
+     * @param Import $import
+     * @param int $limit
+     * @return array
+     */
+    public function getPreview(Import $import, int $limit = 10): array
+    {
+        $filePath = storage_path('app/' . $import->filename);
+        $preview = $this->csvParser->preview($filePath, $limit);
+        $suggestedMapping = $this->csvParser->suggestMapping($preview['headers']);
+
+        return [
+            'headers' => $preview['headers'],
+            'data' => $preview['data'],
+            'total_rows' => $preview['total_rows'],
+            'suggested_mapping' => $suggestedMapping,
+        ];
+    }
+
+    /**
+     * Process import with mapping and duplicate handling.
+     *
+     * @param Import $import
+     * @param array $mapping
+     * @param string $duplicateStrategy
+     * @return void
+     */
+    public function processImport(Import $import, array $mapping, string $duplicateStrategy = 'skip'): void
+    {
+        $import->update([
+            'status' => 'processing',
+            'started_at' => now(),
+            'mapping' => $mapping,
+        ]);
+
+        $filePath = storage_path('app/' . $import->filename);
+        $csvData = $this->csvParser->parse($filePath);
+
+        $successful = 0;
+        $failed = 0;
+        $skipped = 0;
+
+        foreach ($csvData['data'] as $rowNumber => $row) {
+            try {
+                // Map CSV data to contact fields
+                $contactData = $this->mapRowData($row, $mapping);
+
+                // Validate data
+                $validator = Validator::make($contactData, [
+                    'first_name' => 'required|string|max:255',
+                    'last_name' => 'required|string|max:255',
+                    'email' => 'nullable|email|max:255',
+                    'phone' => 'nullable|string|max:50',
+                ]);
+
+                if ($validator->fails()) {
+                    $failed++;
+                    $this->logError($import, $rowNumber + 2, $row, $validator->errors()->first());
+                    continue;
+                }
+
+                // Check for duplicates
+                $duplicateCheck = $this->duplicateDetector->detect($contactData);
+
+                if ($duplicateCheck['is_duplicate']) {
+                    $existing = $duplicateCheck['matches'][0]['contact'];
+                    $result = $this->duplicateDetector->handleDuplicate($existing, $contactData, $duplicateStrategy);
+
+                    if ($result['action'] === 'skipped') {
+                        $skipped++;
+                    } else {
+                        $successful++;
+                    }
+                } else {
+                    // Create new contact
+                    Contact::create($contactData);
+                    $successful++;
+                }
+            } catch (Exception $e) {
+                $failed++;
+                $this->logError($import, $rowNumber + 2, $row, $e->getMessage());
+            }
+        }
+
+        $import->update([
+            'status' => 'completed',
+            'completed_at' => now(),
+            'successful_rows' => $successful,
+            'failed_rows' => $failed,
+            'skipped_rows' => $skipped,
+        ]);
+    }
+
+    /**
+     * Map row data according to mapping configuration.
+     *
+     * @param array $row
+     * @param array $mapping
+     * @return array
+     */
+    protected function mapRowData(array $row, array $mapping): array
+    {
+        $contactData = [];
+
+        foreach ($mapping as $csvColumn => $contactField) {
+            if ($contactField && isset($row[$csvColumn])) {
+                $contactData[$contactField] = trim($row[$csvColumn]);
+            }
+        }
+
+        // Set defaults for required fields
+        if (!isset($contactData['contact_type'])) {
+            $contactData['contact_type'] = 'buyer';
+        }
+
+        if (!isset($contactData['status'])) {
+            $contactData['status'] = 'lead';
+        }
+
+        if (!isset($contactData['source'])) {
+            $contactData['source'] = 'CSV Import';
+        }
+
+        if (!isset($contactData['priority'])) {
+            $contactData['priority'] = 'medium';
+        }
+
+        return $contactData;
+    }
+
+    /**
+     * Log import error.
+     *
+     * @param Import $import
+     * @param int $rowNumber
+     * @param array $rowData
+     * @param string $errorMessage
+     * @return void
+     */
+    protected function logError(Import $import, int $rowNumber, array $rowData, string $errorMessage): void
+    {
+        ImportError::create([
+            'import_id' => $import->id,
+            'row_number' => $rowNumber,
+            'row_data' => $rowData,
+            'error_message' => $errorMessage,
+        ]);
+    }
+
+    /**
+     * Get import statistics.
+     *
+     * @param Import $import
+     * @return array
+     */
+    public function getStatistics(Import $import): array
+    {
+        return [
+            'total_rows' => $import->total_rows,
+            'successful_rows' => $import->successful_rows,
+            'failed_rows' => $import->failed_rows,
+            'skipped_rows' => $import->skipped_rows,
+            'progress_percentage' => $import->progress_percentage,
+            'status' => $import->status,
+        ];
+    }
+
+    /**
+     * Generate CSV template.
+     *
+     * @return string
+     */
+    public function generateTemplate(): string
+    {
+        $headers = [
+            'First Name',
+            'Last Name',
+            'Email',
+            'Phone',
+            'Address',
+            'City',
+            'State',
+            'Zip',
+            'Contact Type',
+            'Status',
+            'Source',
+            'Priority',
+        ];
+
+        $exampleRow = [
+            'John',
+            'Doe',
+            'john.doe@example.com',
+            '(555) 123-4567',
+            '123 Main Street',
+            'Los Angeles',
+            'CA',
+            '90001',
+            'buyer',
+            'lead',
+            'Website',
+            'high',
+        ];
+
+        $filename = 'contact_import_template_' . time() . '.csv';
+        $path = storage_path('app/templates/' . $filename);
+
+        // Ensure templates directory exists
+        if (!file_exists(storage_path('app/templates'))) {
+            mkdir(storage_path('app/templates'), 0755, true);
+        }
+
+        $handle = fopen($path, 'w');
+        fputcsv($handle, $headers);
+        fputcsv($handle, $exampleRow);
+        fclose($handle);
+
+        return $path;
+    }
+
+    /**
+     * Export failed rows to CSV.
+     *
+     * @param Import $import
+     * @return string
+     */
+    public function exportFailedRows(Import $import): string
+    {
+        $errors = $import->errors;
+
+        if ($errors->isEmpty()) {
+            throw new Exception('No failed rows to export');
+        }
+
+        $filename = 'failed_rows_' . $import->id . '_' . time() . '.csv';
+        $path = storage_path('app/exports/' . $filename);
+
+        // Ensure exports directory exists
+        if (!file_exists(storage_path('app/exports'))) {
+            mkdir(storage_path('app/exports'), 0755, true);
+        }
+
+        $handle = fopen($path, 'w');
+
+        // Add headers
+        $firstError = $errors->first();
+        $headers = array_keys($firstError->row_data);
+        $headers[] = 'Error Message';
+        fputcsv($handle, $headers);
+
+        // Add failed rows with error messages
+        foreach ($errors as $error) {
+            $row = array_values($error->row_data);
+            $row[] = $error->error_message;
+            fputcsv($handle, $row);
+        }
+
+        fclose($handle);
+
+        return $path;
+    }
+}

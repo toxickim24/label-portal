@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ContactNoteController;
 use App\Http\Controllers\ContactTagController;
+use App\Http\Controllers\ImportController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -46,6 +47,17 @@ Route::middleware(['auth', 'approved'])->group(function () {
     Route::delete('contact-tags/{tag}', [ContactTagController::class, 'destroy'])->name('contact-tags.destroy');
     Route::get('contact-tags/search', [ContactTagController::class, 'search'])->name('contact-tags.search');
     Route::get('contact-tags/popular', [ContactTagController::class, 'popular'])->name('contact-tags.popular');
+
+    // CSV Import Management
+    Route::get('imports', [ImportController::class, 'index'])->name('imports.index');
+    Route::get('imports/create', [ImportController::class, 'create'])->name('imports.create');
+    Route::post('imports', [ImportController::class, 'store'])->name('imports.store');
+    Route::get('imports/template', [ImportController::class, 'downloadTemplate'])->name('imports.template');
+    Route::get('imports/{import}', [ImportController::class, 'show'])->name('imports.show');
+    Route::get('imports/{import}/map', [ImportController::class, 'map'])->name('imports.map');
+    Route::post('imports/{import}/process', [ImportController::class, 'process'])->name('imports.process');
+    Route::get('imports/{import}/failed-rows', [ImportController::class, 'downloadFailedRows'])->name('imports.failed-rows');
+    Route::delete('imports/{import}', [ImportController::class, 'destroy'])->name('imports.destroy');
 });
 
 // Admin routes

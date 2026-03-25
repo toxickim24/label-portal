@@ -48,6 +48,14 @@ const showingNavigationDropdown = ref(false);
                                     Contacts
                                 </NavLink>
 
+                                <!-- Import Navigation -->
+                                <NavLink
+                                    :href="route('imports.index')"
+                                    :active="route().current('imports.*')"
+                                >
+                                    Import
+                                </NavLink>
+
                                 <!-- Admin Navigation -->
                                 <NavLink
                                     v-if="$page.props.auth.user.roles?.some(role => role.name === 'admin')"
@@ -177,6 +185,14 @@ const showingNavigationDropdown = ref(false);
                             :active="route().current('contacts.*')"
                         >
                             Contacts
+                        </ResponsiveNavLink>
+
+                        <!-- Import Navigation (Mobile) -->
+                        <ResponsiveNavLink
+                            :href="route('imports.index')"
+                            :active="route().current('imports.*')"
+                        >
+                            Import
                         </ResponsiveNavLink>
 
                         <!-- Admin Navigation (Mobile) -->
