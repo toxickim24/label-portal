@@ -176,7 +176,8 @@ class ImportController extends Controller
         $this->authorize('delete', $import);
 
         // Delete the CSV file - handle Windows path separators
-        $filePath = storage_path('app' . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $import->filename));
+        // Note: 'local' disk uses 'app/private' as root
+        $filePath = storage_path('app' . DIRECTORY_SEPARATOR . 'private' . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $import->filename));
         if (file_exists($filePath)) {
             unlink($filePath);
         }

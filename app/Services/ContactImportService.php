@@ -41,18 +41,13 @@ class ContactImportService
             throw new Exception('Failed to store CSV file');
         }
 
-        // Full path to the stored file - normalize path separators for Windows
-        $fullPath = storage_path('app' . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $path));
+        // Full path to the stored file - use Storage facade to get correct path
+        // Laravel's 'local' disk uses 'app/private' as root by default
+        $fullPath = storage_path('app' . DIRECTORY_SEPARATOR . 'private' . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $path));
 
         // Validate the stored file
         if (!file_exists($fullPath)) {
-            // Try alternate path construction
-            $alternatePath = storage_path('app') . DIRECTORY_SEPARATOR . 'imports' . DIRECTORY_SEPARATOR . $filename;
-            if (file_exists($alternatePath)) {
-                $fullPath = $alternatePath;
-            } else {
-                throw new Exception('File was not stored correctly. Tried: ' . $fullPath . ' and ' . $alternatePath);
-            }
+            throw new Exception('File was not stored correctly at: ' . $fullPath);
         }
 
         $validation = $this->csvParser->validate($fullPath);
@@ -355,7 +350,8 @@ class ContactImportService
     protected function getImportFilePath(Import $import): string
     {
         // Normalize path separators for Windows
+        // Note: 'local' disk uses 'app/private' as root
         $relativePath = str_replace('/', DIRECTORY_SEPARATOR, $import->filename);
-        return storage_path('app' . DIRECTORY_SEPARATOR . $relativePath);
+        return storage_path('app' . DIRECTORY_SEPARATOR . 'private' . DIRECTORY_SEPARATOR . $relativePath);
     }
 }
