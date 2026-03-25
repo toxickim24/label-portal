@@ -1,6 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 
 defineProps({
     imports: Object,
@@ -19,6 +19,14 @@ const getStatusColor = (status) => {
 
 const formatDate = (date) => {
     return new Date(date).toLocaleString();
+};
+
+const cancelImport = (importRecord) => {
+    if (confirm(`Are you sure you want to cancel the import of "${importRecord.original_filename}"? This will delete the uploaded file and cannot be undone.`)) {
+        router.post(route('imports.cancel', importRecord.id), {}, {
+            preserveScroll: true,
+        });
+    }
 };
 </script>
 
@@ -102,6 +110,13 @@ const formatDate = (date) => {
                                             >
                                                 View
                                             </Link>
+                                            <button
+                                                v-if="importRecord.status === 'pending' || importRecord.status === 'failed'"
+                                                @click="cancelImport(importRecord)"
+                                                class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
+                                            >
+                                                Cancel
+                                            </button>
                                         </td>
                                     </tr>
                                 </tbody>

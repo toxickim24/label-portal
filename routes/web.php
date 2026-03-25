@@ -56,6 +56,7 @@ Route::middleware(['auth', 'approved'])->group(function () {
     Route::get('imports/{import}', [ImportController::class, 'show'])->name('imports.show');
     Route::get('imports/{import}/map', [ImportController::class, 'map'])->name('imports.map');
     Route::post('imports/{import}/process', [ImportController::class, 'process'])->name('imports.process');
+    Route::post('imports/{import}/cancel', [ImportController::class, 'cancel'])->name('imports.cancel');
     Route::get('imports/{import}/failed-rows', [ImportController::class, 'downloadFailedRows'])->name('imports.failed-rows');
     Route::delete('imports/{import}', [ImportController::class, 'destroy'])->name('imports.destroy');
 });

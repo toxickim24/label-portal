@@ -169,6 +169,31 @@ class ImportController extends Controller
     }
 
     /**
+     * Cancel a pending import.
+     */
+    public function cancel(Import $import)
+    {
+        $this->authorize('delete', $import);
+
+        // Only allow canceling pending or failed imports
+        if (!in_array($import->status, ['pending', 'failed'])) {
+            return back()->withErrors(['error' => 'Only pending or failed imports can be canceled.']);
+        }
+
+        // Delete the CSV file - handle Windows path separators
+        // Note: 'local' disk uses 'app/private' as root
+        $filePath = storage_path('app' . DIRECTORY_SEPARATOR . 'private' . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $import->filename));
+        if (file_exists($filePath)) {
+            unlink($filePath);
+        }
+
+        $import->delete();
+
+        return redirect()->route('imports.index')
+            ->with('success', 'Import canceled successfully.');
+    }
+
+    /**
      * Delete an import record.
      */
     public function destroy(Import $import)
