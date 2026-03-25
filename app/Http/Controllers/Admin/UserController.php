@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\UserService;
+use App\Services\ClientInvitationService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -16,7 +17,8 @@ class UserController extends Controller
 {
     use AuthorizesRequests;
     public function __construct(
-        protected UserService $userService
+        protected UserService $userService,
+        protected ClientInvitationService $invitationService
     ) {
         // Authorization is handled in routes via role middleware
     }
@@ -170,5 +172,47 @@ class UserController extends Controller
         $this->userService->restoreUser($id);
 
         return back()->with('success', 'User restored successfully.');
+    }
+
+    /**
+     * Show the client invitation form
+     */
+    public function inviteClient(): Response
+    {
+        return Inertia::render('Admin/Users/InviteClient');
+    }
+
+    /**
+     * Send client invitation
+     */
+    public function sendInvitation(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+        ]);
+
+        try {
+            $this->invitationService->createInvitation($validated);
+
+            return redirect()->route('admin.users.index')
+                ->with('success', 'Client invitation sent successfully.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Resend client invitation
+     */
+    public function resendInvitation(User $user): RedirectResponse
+    {
+        try {
+            $this->invitationService->resendInvitation($user);
+
+            return back()->with('success', 'Invitation resent successfully.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
+        }
     }
 }

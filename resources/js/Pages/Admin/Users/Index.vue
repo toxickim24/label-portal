@@ -87,12 +87,20 @@ const deleteUser = (userId) => {
                 <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                     User Management
                 </h2>
-                <Link
-                    :href="route('admin.users.create')"
-                    class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-                >
-                    Create User
-                </Link>
+                <div class="flex gap-3">
+                    <Link
+                        :href="route('admin.users.invite-client')"
+                        class="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
+                    >
+                        Invite Client
+                    </Link>
+                    <Link
+                        :href="route('admin.users.create')"
+                        class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
+                    >
+                        Create User
+                    </Link>
+                </div>
             </div>
         </template>
 

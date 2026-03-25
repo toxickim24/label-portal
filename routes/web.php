@@ -7,6 +7,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ContactNoteController;
 use App\Http\Controllers\ContactTagController;
 use App\Http\Controllers\ImportController;
+use App\Http\Controllers\ClientInvitationController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -15,7 +16,15 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+// Client Invitation Routes (public)
+Route::get('/invitation/{token}', [ClientInvitationController::class, 'show'])->name('client.invitation.accept');
+Route::post('/invitation/accept', [ClientInvitationController::class, 'accept'])->name('client.invitation.process');
+
 Route::get('/dashboard', function () {
+    // Redirect to appropriate dashboard based on role
+    if (auth()->check() && auth()->user()->isClient()) {
+        return redirect()->route('client.dashboard');
+    }
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified', 'approved'])->name('dashboard');
 
@@ -71,10 +80,26 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'approve
     Route::post('users/{user}/unsuspend', [UserController::class, 'unsuspend'])->name('users.unsuspend');
     Route::post('users/{id}/restore', [UserController::class, 'restore'])->name('users.restore');
 
+    // Client Invitation
+    Route::get('users/invite/client', [UserController::class, 'inviteClient'])->name('users.invite-client');
+    Route::post('users/invite/send', [UserController::class, 'sendInvitation'])->name('users.send-invitation');
+    Route::post('users/{user}/resend-invitation', [UserController::class, 'resendInvitation'])->name('users.resend-invitation');
+
     // Settings Management
     Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::post('settings/branding', [SettingsController::class, 'updateBranding'])->name('settings.branding');
     Route::post('settings/reset-logos', [SettingsController::class, 'resetLogos'])->name('settings.reset-logos');
+});
+
+// Client Portal Routes (protected)
+Route::prefix('client')->name('client.')->middleware(['auth', 'verified', 'approved', 'role:client'])->group(function () {
+    Route::get('/dashboard', function () {
+        return Inertia::render('Client/Dashboard');
+    })->name('dashboard');
+
+    Route::get('/profile', function () {
+        return Inertia::render('Client/Profile');
+    })->name('profile');
 });
 
 require __DIR__.'/auth.php';

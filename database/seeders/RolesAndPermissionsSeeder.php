@@ -33,27 +33,40 @@ class RolesAndPermissionsSeeder extends Seeder
 
             // Activity Log
             'view-activity-log',
+
+            // Client Portal Permissions
+            'access-client-portal',
+            'view-own-profile',
+            'edit-own-profile',
+            'view-own-activity',
+            'view-own-notifications',
         ];
 
         foreach ($permissions as $permission) {
-            Permission::create(['name' => $permission]);
+            Permission::firstOrCreate(['name' => $permission]);
         }
 
         // Create roles and assign permissions
 
         // Admin role - has all permissions
-        $adminRole = Role::create(['name' => 'admin']);
-        $adminRole->givePermissionTo(Permission::all());
+        $adminRole = Role::firstOrCreate(['name' => 'admin']);
+        $adminRole->syncPermissions(Permission::all());
 
         // Agent role - can view and manage users but not settings
-        $agentRole = Role::create(['name' => 'agent']);
-        $agentRole->givePermissionTo([
+        $agentRole = Role::firstOrCreate(['name' => 'agent']);
+        $agentRole->syncPermissions([
             'view-users',
             'view-activity-log',
         ]);
 
-        // Client role - basic permissions only
-        $clientRole = Role::create(['name' => 'client']);
-        // Clients have no special permissions by default
+        // Client role - restricted permissions for client portal access
+        $clientRole = Role::firstOrCreate(['name' => 'client']);
+        $clientRole->syncPermissions([
+            'access-client-portal',
+            'view-own-profile',
+            'edit-own-profile',
+            'view-own-activity',
+            'view-own-notifications',
+        ]);
     }
 }

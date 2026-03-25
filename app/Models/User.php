@@ -31,6 +31,9 @@ class User extends Authenticatable
         'approved_by',
         'suspended_at',
         'suspended_by',
+        'invitation_token',
+        'invitation_sent_at',
+        'invitation_accepted_at',
     ];
 
     /**
@@ -57,6 +60,8 @@ class User extends Authenticatable
             'is_suspended' => 'boolean',
             'approved_at' => 'datetime',
             'suspended_at' => 'datetime',
+            'invitation_sent_at' => 'datetime',
+            'invitation_accepted_at' => 'datetime',
         ];
     }
 
@@ -122,5 +127,37 @@ class User extends Authenticatable
     public function needsApproval(): bool
     {
         return !$this->is_approved;
+    }
+
+    /**
+     * Check if user has a pending invitation
+     */
+    public function hasPendingInvitation(): bool
+    {
+        return !empty($this->invitation_token) && is_null($this->invitation_accepted_at);
+    }
+
+    /**
+     * Check if user is a client
+     */
+    public function isClient(): bool
+    {
+        return $this->hasRole('client');
+    }
+
+    /**
+     * Get client notifications
+     */
+    public function clientNotifications()
+    {
+        return $this->hasMany(ClientNotification::class);
+    }
+
+    /**
+     * Get client activities
+     */
+    public function clientActivities()
+    {
+        return $this->hasMany(ClientActivity::class);
     }
 }
