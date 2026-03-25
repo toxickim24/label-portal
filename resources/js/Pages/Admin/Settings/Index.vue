@@ -90,7 +90,7 @@ const resetLogos = () => {
                                     v-model="form.app_name"
                                     type="text"
                                     class="mt-1 block w-full"
-                                    placeholder="Label Client Portal"
+                                    placeholder="McMullen Properties Client Portal"
                                 />
                                 <InputError class="mt-2" :message="form.errors.app_name" />
                                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">

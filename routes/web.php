@@ -33,6 +33,7 @@ Route::middleware(['auth', 'approved'])->group(function () {
     Route::post('contacts/bulk/delete', [ContactController::class, 'bulkDelete'])->name('contacts.bulk-delete');
     Route::post('contacts/bulk/assign', [ContactController::class, 'bulkAssign'])->name('contacts.bulk-assign');
     Route::post('contacts/bulk/tag', [ContactController::class, 'bulkTag'])->name('contacts.bulk-tag');
+    Route::post('contacts/bulk/update', [ContactController::class, 'bulkUpdate'])->name('contacts.bulk-update');
 
     // Contact Notes
     Route::post('contacts/{contact}/notes', [ContactNoteController::class, 'store'])->name('contact-notes.store');

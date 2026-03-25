@@ -238,6 +238,69 @@ class ContactService
     }
 
     /**
+     * Bulk update contacts with multiple fields
+     */
+    public function bulkUpdate(array $contactIds, array $data): int
+    {
+        DB::beginTransaction();
+        try {
+            // Prepare update data - only include non-null values
+            $updateData = [];
+
+            if (isset($data['status'])) {
+                $updateData['status'] = $data['status'];
+            }
+
+            if (isset($data['priority'])) {
+                $updateData['priority'] = $data['priority'];
+            }
+
+            if (isset($data['assigned_to'])) {
+                $updateData['assigned_to'] = $data['assigned_to'];
+            }
+
+            if (isset($data['contact_type'])) {
+                $updateData['contact_type'] = $data['contact_type'];
+            }
+
+            if (isset($data['source'])) {
+                $updateData['source'] = $data['source'];
+            }
+
+            // Update basic fields if any
+            $count = 0;
+            if (!empty($updateData)) {
+                $count = Contact::whereIn('id', $contactIds)->update($updateData);
+            }
+
+            // Handle tags separately
+            $clearExistingTags = isset($data['clear_existing_tags']) && $data['clear_existing_tags'] === true;
+            $tagIds = isset($data['tag_ids']) && is_array($data['tag_ids']) ? $data['tag_ids'] : [];
+
+            if ($clearExistingTags || !empty($tagIds)) {
+                foreach ($contactIds as $contactId) {
+                    $contact = Contact::find($contactId);
+                    if ($contact) {
+                        if ($clearExistingTags) {
+                            // If clear is enabled, sync (replace) tags instead of adding
+                            $contact->tags()->sync($tagIds); // Empty array clears all, non-empty replaces
+                        } elseif (!empty($tagIds)) {
+                            // If clear is not enabled, add without removing existing
+                            $contact->tags()->syncWithoutDetaching($tagIds);
+                        }
+                    }
+                }
+            }
+
+            DB::commit();
+            return $count;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
+    /**
      * Get contact statistics
      */
     public function getStatistics(): array

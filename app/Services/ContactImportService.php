@@ -102,9 +102,11 @@ class ContactImportService
      * @param Import $import
      * @param array $mapping
      * @param string $duplicateStrategy
+     * @param array $globalTagIds
+     * @param int|null $globalAssignedTo
      * @return void
      */
-    public function processImport(Import $import, array $mapping, string $duplicateStrategy = 'skip'): void
+    public function processImport(Import $import, array $mapping, string $duplicateStrategy = 'skip', array $globalTagIds = [], ?int $globalAssignedTo = null): void
     {
         $import->update([
             'status' => 'processing',
@@ -124,6 +126,11 @@ class ContactImportService
                 // Map CSV data to contact fields
                 $contactData = $this->mapRowData($row, $mapping);
 
+                // Apply global assigned_to to all contacts
+                if ($globalAssignedTo) {
+                    $contactData['assigned_to'] = $globalAssignedTo;
+                }
+
                 // Validate data
                 $validator = Validator::make($contactData, [
                     'first_name' => 'required|string|max:255',
@@ -138,6 +145,8 @@ class ContactImportService
                     continue;
                 }
 
+                $contact = null;
+
                 // Check for duplicates
                 $duplicateCheck = $this->duplicateDetector->detect($contactData);
 
@@ -147,13 +156,20 @@ class ContactImportService
 
                     if ($result['action'] === 'skipped') {
                         $skipped++;
+                        $contact = $existing; // Still apply tags to existing contact
                     } else {
                         $successful++;
+                        $contact = $result['contact'];
                     }
                 } else {
                     // Create new contact
-                    Contact::create($contactData);
+                    $contact = Contact::create($contactData);
                     $successful++;
+                }
+
+                // Apply tags to the contact
+                if ($contact) {
+                    $this->applyTags($contact, $globalTagIds);
                 }
             } catch (Exception $e) {
                 $failed++;
@@ -339,6 +355,21 @@ class ContactImportService
         fclose($handle);
 
         return $path;
+    }
+
+    /**
+     * Apply global tags to a contact.
+     *
+     * @param Contact $contact
+     * @param array $globalTagIds Array of tag IDs to apply globally
+     * @return void
+     */
+    protected function applyTags(Contact $contact, array $globalTagIds): void
+    {
+        if (!empty($globalTagIds)) {
+            // Sync tags (add without removing existing)
+            $contact->tags()->syncWithoutDetaching($globalTagIds);
+        }
     }
 
     /**

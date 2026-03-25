@@ -269,6 +269,45 @@ class ContactController extends Controller
     }
 
     /**
+     * Bulk update contacts
+     */
+    public function bulkUpdate(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'contact_ids' => 'required|array',
+            'contact_ids.*' => 'exists:contacts,id',
+            'status' => 'nullable|string|max:50',
+            'priority' => 'nullable|string|in:low,medium,high',
+            'assigned_to' => 'nullable|exists:users,id',
+            'contact_type' => 'nullable|string|max:50',
+            'source' => 'nullable|string|max:100',
+            'tag_ids' => 'nullable|array',
+            'tag_ids.*' => 'exists:contact_tags,id',
+            'clear_existing_tags' => 'nullable|boolean',
+        ]);
+
+        // Remove contact_ids from the data to update
+        $contactIds = $validated['contact_ids'];
+        unset($validated['contact_ids']);
+
+        // Remove empty values (but keep boolean false values)
+        $dataToUpdate = array_filter($validated, function ($value, $key) {
+            if ($key === 'clear_existing_tags') {
+                return true; // Always include this boolean field
+            }
+            return $value !== null && $value !== '';
+        }, ARRAY_FILTER_USE_BOTH);
+
+        if (empty($dataToUpdate) || (count($dataToUpdate) === 1 && isset($dataToUpdate['clear_existing_tags']))) {
+            return back()->withErrors(['error' => 'No fields selected for update.']);
+        }
+
+        $this->contactService->bulkUpdate($contactIds, $dataToUpdate);
+
+        return back()->with('success', 'Contacts updated successfully.');
+    }
+
+    /**
      * Display pipeline/kanban view
      */
     public function pipeline(): Response

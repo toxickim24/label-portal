@@ -62,7 +62,11 @@ class SettingsService
         }
 
         // Return default logo
-        $filename = $darkMode ? "label-white-{$type}.png" : "label-{$type}.png";
+        if ($type === 'logo') {
+            $filename = $darkMode ? "mcmullen-logo-white.png" : "mcmullen-logo-blue.png";
+        } else {
+            $filename = "mcmullen-favicon.png";
+        }
         return asset("images/logos/{$filename}");
     }
 

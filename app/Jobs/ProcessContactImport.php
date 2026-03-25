@@ -15,15 +15,19 @@ class ProcessContactImport implements ShouldQueue
     protected Import $import;
     protected array $mapping;
     protected string $duplicateStrategy;
+    protected array $globalTagIds;
+    protected ?int $globalAssignedTo;
 
     /**
      * Create a new job instance.
      */
-    public function __construct(Import $import, array $mapping, string $duplicateStrategy = 'skip')
+    public function __construct(Import $import, array $mapping, string $duplicateStrategy = 'skip', array $globalTagIds = [], ?int $globalAssignedTo = null)
     {
         $this->import = $import;
         $this->mapping = $mapping;
         $this->duplicateStrategy = $duplicateStrategy;
+        $this->globalTagIds = $globalTagIds;
+        $this->globalAssignedTo = $globalAssignedTo;
     }
 
     /**
@@ -35,7 +39,9 @@ class ProcessContactImport implements ShouldQueue
             $importService->processImport(
                 $this->import,
                 $this->mapping,
-                $this->duplicateStrategy
+                $this->duplicateStrategy,
+                $this->globalTagIds,
+                $this->globalAssignedTo
             );
         } catch (Exception $e) {
             $this->import->update([

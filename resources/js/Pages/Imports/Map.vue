@@ -7,11 +7,15 @@ const props = defineProps({
     importRecord: Object,
     preview: Object,
     availableFields: Object,
+    users: Array,
+    tags: Array,
 });
 
 const form = useForm({
     mapping: props.preview.suggested_mapping || {},
     duplicate_strategy: 'skip',
+    global_assigned_to: null,
+    global_tag_ids: [],
 });
 
 const submit = () => {
@@ -114,6 +118,61 @@ const submit = () => {
                                 </div>
                             </div>
 
+                            <div>
+                                <h4 class="text-md font-medium text-gray-900 dark:text-gray-100 mb-2">
+                                    Assign To User (Optional)
+                                </h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                                    Select a user to assign all imported contacts to.
+                                </p>
+                                <select
+                                    v-model="form.global_assigned_to"
+                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 sm:text-sm"
+                                >
+                                    <option :value="null">-- None --</option>
+                                    <option
+                                        v-for="user in users"
+                                        :key="user.id"
+                                        :value="user.id"
+                                    >
+                                        {{ user.name }} ({{ user.email }})
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <h4 class="text-md font-medium text-gray-900 dark:text-gray-100 mb-2">
+                                    Global Tags (Optional)
+                                </h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                                    Select tags to apply to all imported contacts.
+                                </p>
+                                <div class="space-y-2 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                                    <label
+                                        v-for="tag in tags"
+                                        :key="tag.id"
+                                        class="flex items-center"
+                                    >
+                                        <input
+                                            v-model="form.global_tag_ids"
+                                            type="checkbox"
+                                            :value="tag.id"
+                                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700"
+                                        />
+                                        <span class="ml-2 flex items-center gap-2">
+                                            <span
+                                                class="inline-block w-3 h-3 rounded-full"
+                                                :style="{ backgroundColor: tag.color }"
+                                            ></span>
+                                            <span class="text-sm text-gray-700 dark:text-gray-300">{{ tag.name }}</span>
+                                        </span>
+                                    </label>
+                                    <div v-if="tags.length === 0" class="text-sm text-gray-500 dark:text-gray-400 italic">
+                                        No tags available. Create tags first in the Contacts section.
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
                                 <h4 class="text-md font-medium text-gray-900 dark:text-gray-100 mb-3">
                                     Preview (First Row)
@@ -136,7 +195,7 @@ const submit = () => {
                                     class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 disabled:opacity-50"
                                 >
                                     <span v-if="form.processing">Processing...</span>
-                                    <span v-else">Start Import</span>
+                                    <span v-else>Start Import</span>
                                 </button>
                             </div>
                         </form>

@@ -91,10 +91,22 @@ class ImportController extends Controller
             'priority' => 'Priority',
         ];
 
+        // Get all active users for assigned_to dropdown reference
+        $users = \App\Models\User::where('is_approved', true)
+            ->where('is_suspended', false)
+            ->select('id', 'name', 'email')
+            ->orderBy('name')
+            ->get();
+
+        // Get all existing tags for global tag selection
+        $tags = \App\Models\ContactTag::orderBy('name')->get();
+
         return Inertia::render('Imports/Map', [
             'importRecord' => $import,
             'preview' => $preview,
             'availableFields' => $availableFields,
+            'users' => $users,
+            'tags' => $tags,
         ]);
     }
 
@@ -108,6 +120,9 @@ class ImportController extends Controller
         $request->validate([
             'mapping' => 'required|array',
             'duplicate_strategy' => 'required|in:skip,update,merge',
+            'global_assigned_to' => 'nullable|exists:users,id',
+            'global_tag_ids' => 'nullable|array',
+            'global_tag_ids.*' => 'exists:contact_tags,id',
         ]);
 
         try {
@@ -115,7 +130,9 @@ class ImportController extends Controller
             ProcessContactImport::dispatch(
                 $import,
                 $request->mapping,
-                $request->duplicate_strategy
+                $request->duplicate_strategy,
+                $request->global_tag_ids ?? [],
+                $request->global_assigned_to
             );
 
             return redirect()->route('imports.show', $import->id)
@@ -173,11 +190,22 @@ class ImportController extends Controller
      */
     public function cancel(Import $import)
     {
-        $this->authorize('delete', $import);
+        // Check authorization - allow users to cancel their own imports or admins to cancel any
+        if ($import->user_id !== auth()->id() && !auth()->user()->hasRole('admin')) {
+            abort(403, 'You can only cancel your own imports.');
+        }
 
-        // Only allow canceling pending or failed imports
-        if (!in_array($import->status, ['pending', 'failed'])) {
-            return back()->withErrors(['error' => 'Only pending or failed imports can be canceled.']);
+        // Only allow canceling pending, failed, or processing imports
+        if (!in_array($import->status, ['pending', 'failed', 'processing'])) {
+            return back()->withErrors(['error' => 'Only pending, processing, or failed imports can be canceled.']);
+        }
+
+        // If still processing, mark as failed first
+        if ($import->status === 'processing') {
+            $import->update([
+                'status' => 'failed',
+                'completed_at' => now(),
+            ]);
         }
 
         // Delete the CSV file - handle Windows path separators

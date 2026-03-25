@@ -1,12 +1,15 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
+import { onMounted, onUnmounted, ref } from 'vue';
 
-defineProps({
+const props = defineProps({
     importRecord: Object,
     statistics: Object,
     errors: Object,
 });
+
+const refreshInterval = ref(null);
 
 const getStatusColor = (status) => {
     const colors = {
@@ -17,6 +20,30 @@ const getStatusColor = (status) => {
     };
     return colors[status] || 'bg-gray-100 text-gray-800';
 };
+
+// Auto-refresh when status is pending or processing
+onMounted(() => {
+    if (props.importRecord.status === 'pending' || props.importRecord.status === 'processing') {
+        refreshInterval.value = setInterval(() => {
+            router.reload({ only: ['importRecord', 'statistics', 'errors'], preserveScroll: true });
+        }, 2000); // Refresh every 2 seconds
+    }
+});
+
+// Clean up interval when component unmounts or status changes
+onUnmounted(() => {
+    if (refreshInterval.value) {
+        clearInterval(refreshInterval.value);
+    }
+});
+
+// Stop auto-refresh when completed or failed
+if (props.importRecord.status === 'completed' || props.importRecord.status === 'failed') {
+    if (refreshInterval.value) {
+        clearInterval(refreshInterval.value);
+        refreshInterval.value = null;
+    }
+}
 </script>
 
 <template>
@@ -36,6 +63,60 @@ const getStatusColor = (status) => {
 
         <div class="py-12">
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8 space-y-6">
+                <!-- Pending/Processing Alert -->
+                <div v-if="importRecord.status === 'pending' || importRecord.status === 'processing'" class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+                    <div class="flex items-center">
+                        <svg class="animate-spin h-5 w-5 text-blue-600 dark:text-blue-400 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <div>
+                            <h3 class="text-lg font-medium text-blue-900 dark:text-blue-100">
+                                {{ importRecord.status === 'pending' ? 'Import Queued' : 'Processing Import' }}
+                            </h3>
+                            <p class="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                                {{ importRecord.status === 'pending' ? 'Your import is waiting in the queue. This page will update automatically.' : 'Your import is being processed. This page will update automatically every 2 seconds.' }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Success Alert -->
+                <div v-if="importRecord.status === 'completed'" class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-6">
+                    <div class="flex items-center">
+                        <svg class="h-5 w-5 text-green-600 dark:text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <div>
+                            <h3 class="text-lg font-medium text-green-900 dark:text-green-100">
+                                Import Completed Successfully!
+                            </h3>
+                            <p class="text-sm text-green-700 dark:text-green-300 mt-1">
+                                {{ statistics.successful_rows }} contact(s) imported successfully
+                                <span v-if="statistics.skipped_rows > 0">, {{ statistics.skipped_rows }} skipped</span>
+                                <span v-if="statistics.failed_rows > 0">, {{ statistics.failed_rows }} failed</span>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Failed Alert -->
+                <div v-if="importRecord.status === 'failed'" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+                    <div class="flex items-center">
+                        <svg class="h-5 w-5 text-red-600 dark:text-red-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                        <div>
+                            <h3 class="text-lg font-medium text-red-900 dark:text-red-100">
+                                Import Failed
+                            </h3>
+                            <p class="text-sm text-red-700 dark:text-red-300 mt-1">
+                                The import could not be completed. Please check the errors below.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Statistics -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6">
