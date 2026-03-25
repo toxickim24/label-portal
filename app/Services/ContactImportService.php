@@ -31,19 +31,36 @@ class ContactImportService
      */
     public function uploadFile($file, int $userId): Import
     {
-        // Validate file
-        $validation = $this->csvParser->validate($file->path());
+        // Generate unique filename
+        $filename = time() . '_' . $file->getClientOriginalName();
+
+        // Store file first
+        $path = $file->storeAs('imports', $filename);
+
+        if (!$path) {
+            throw new Exception('Failed to store CSV file');
+        }
+
+        // Full path to the stored file
+        $fullPath = storage_path('app/' . $path);
+
+        // Validate the stored file
+        if (!file_exists($fullPath)) {
+            throw new Exception('File was not stored correctly: ' . $fullPath);
+        }
+
+        $validation = $this->csvParser->validate($fullPath);
 
         if (!$validation['valid']) {
+            // Clean up the stored file if validation fails
+            if (file_exists($fullPath)) {
+                unlink($fullPath);
+            }
             throw new Exception('Invalid CSV file: ' . implode(', ', $validation['errors']));
         }
 
-        // Generate unique filename
-        $filename = time() . '_' . $file->getClientOriginalName();
-        $path = $file->storeAs('imports', $filename);
-
         // Parse CSV to get row count
-        $preview = $this->csvParser->preview(storage_path('app/' . $path), 1);
+        $preview = $this->csvParser->preview($fullPath, 1);
 
         // Create import record
         $import = Import::create([
