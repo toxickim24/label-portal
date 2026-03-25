@@ -3,6 +3,9 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\ContactController;
+use App\Http\Controllers\ContactNoteController;
+use App\Http\Controllers\ContactTagController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -19,6 +22,30 @@ Route::middleware(['auth', 'approved'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Contact Management
+    Route::resource('contacts', ContactController::class);
+    Route::get('contacts/pipeline/view', [ContactController::class, 'pipeline'])->name('contacts.pipeline');
+    Route::post('contacts/{contact}/assign', [ContactController::class, 'assign'])->name('contacts.assign');
+    Route::post('contacts/{contact}/status', [ContactController::class, 'updateStatus'])->name('contacts.status');
+    Route::post('contacts/{id}/restore', [ContactController::class, 'restore'])->name('contacts.restore');
+    Route::post('contacts/bulk/delete', [ContactController::class, 'bulkDelete'])->name('contacts.bulk-delete');
+    Route::post('contacts/bulk/assign', [ContactController::class, 'bulkAssign'])->name('contacts.bulk-assign');
+    Route::post('contacts/bulk/tag', [ContactController::class, 'bulkTag'])->name('contacts.bulk-tag');
+
+    // Contact Notes
+    Route::post('contacts/{contact}/notes', [ContactNoteController::class, 'store'])->name('contact-notes.store');
+    Route::put('contact-notes/{note}', [ContactNoteController::class, 'update'])->name('contact-notes.update');
+    Route::post('contact-notes/{note}/toggle-pin', [ContactNoteController::class, 'togglePin'])->name('contact-notes.toggle-pin');
+    Route::delete('contact-notes/{note}', [ContactNoteController::class, 'destroy'])->name('contact-notes.destroy');
+
+    // Contact Tags
+    Route::get('contact-tags', [ContactTagController::class, 'index'])->name('contact-tags.index');
+    Route::post('contact-tags', [ContactTagController::class, 'store'])->name('contact-tags.store');
+    Route::put('contact-tags/{tag}', [ContactTagController::class, 'update'])->name('contact-tags.update');
+    Route::delete('contact-tags/{tag}', [ContactTagController::class, 'destroy'])->name('contact-tags.destroy');
+    Route::get('contact-tags/search', [ContactTagController::class, 'search'])->name('contact-tags.search');
+    Route::get('contact-tags/popular', [ContactTagController::class, 'popular'])->name('contact-tags.popular');
 });
 
 // Admin routes
