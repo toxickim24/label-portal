@@ -156,6 +156,39 @@
             background-color: #f9fafb;
             border-radius: 8px;
         }
+        .confidence-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 9pt;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .confidence-very-high {
+            background-color: #059669;
+            color: white;
+        }
+        .confidence-high {
+            background-color: #10B981;
+            color: white;
+        }
+        .confidence-moderate {
+            background-color: #F59E0B;
+            color: white;
+        }
+        .confidence-low {
+            background-color: #EF4444;
+            color: white;
+        }
+        .valuation-summary {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #F3F4F6;
+            border-left: 4px solid #B49106;
+            font-size: 10pt;
+            line-height: 1.6;
+            text-align: justify;
+        }
     </style>
 </head>
 <body>
@@ -179,9 +212,24 @@
             </div>
             @endif
         </div>
+
+        @if(isset($confidenceScore) && $confidenceScore)
+        <div style="text-align: center; margin-top: 15px;">
+            <span style="font-weight: bold; font-size: 11pt;">Confidence Level:</span>
+            <span class="confidence-badge confidence-{{ strtolower(str_replace(' ', '-', $confidenceScore['level'])) }}">
+                {{ $confidenceScore['level'] }} ({{ $confidenceScore['score'] }}/5.0)
+            </span>
+        </div>
+        @endif
         @endif
 
+        @if(isset($valuationSummary) && $valuationSummary)
+        <div class="valuation-summary">
+            {{ $valuationSummary }}
+        </div>
+        @else
         <p>This Comparative Market Analysis (CMA) was prepared to provide an estimated market value for the subject property. The valuation is based on recent comparable sales in the area, adjusted for differences in property characteristics.</p>
+        @endif
     </div>
 
     <!-- Subject Property -->
@@ -248,6 +296,7 @@
                     <th>$/Sq Ft</th>
                     <th>Beds</th>
                     <th>Baths</th>
+                    <th>Distance</th>
                     <th>Sale Date</th>
                 </tr>
             </thead>
@@ -260,6 +309,7 @@
                     <td>{{ $comp['price_per_sqft'] ? '$' . number_format($comp['price_per_sqft'], 2) : 'N/A' }}</td>
                     <td>{{ $comp['data']['bedrooms'] ?? '-' }}</td>
                     <td>{{ $comp['data']['bathrooms'] ?? '-' }}</td>
+                    <td>{{ isset($comp['data']['distance']) ? number_format($comp['data']['distance'], 1) . ' mi' : '-' }}</td>
                     <td>{{ isset($comp['data']['sale_date']) ? date('m/d/Y', strtotime($comp['data']['sale_date'])) : 'N/A' }}</td>
                 </tr>
                 @endforeach

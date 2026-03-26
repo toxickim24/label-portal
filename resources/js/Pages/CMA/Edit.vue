@@ -332,7 +332,7 @@ const comparables = computed(() => props.report.comparables || []);
                                     </div>
                                 </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                                     <div>
                                         <InputLabel value="Bedrooms" />
                                         <TextInput
@@ -356,6 +356,16 @@ const comparables = computed(() => props.report.comparables || []);
                                             v-model="comparableForm.sale_date"
                                             type="date"
                                             class="mt-1 block w-full"
+                                        />
+                                    </div>
+                                    <div>
+                                        <InputLabel value="Distance (miles)" />
+                                        <TextInput
+                                            v-model="comparableForm.distance"
+                                            type="number"
+                                            step="0.1"
+                                            class="mt-1 block w-full"
+                                            placeholder="0.5"
                                         />
                                     </div>
                                 </div>
@@ -393,8 +403,13 @@ const comparables = computed(() => props.report.comparables || []);
                                             <div><strong>Beds:</strong> {{ comp.bedrooms || 'N/A' }}</div>
                                             <div><strong>Baths:</strong> {{ comp.bathrooms || 'N/A' }}</div>
                                         </div>
-                                        <div v-if="comp.sale_date" class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                                            <strong>Sale Date:</strong> {{ new Date(comp.sale_date).toLocaleDateString() }}
+                                        <div class="mt-1 text-sm text-gray-600 dark:text-gray-400 flex gap-4">
+                                            <div v-if="comp.sale_date">
+                                                <strong>Sale Date:</strong> {{ new Date(comp.sale_date).toLocaleDateString() }}
+                                            </div>
+                                            <div v-if="comp.distance">
+                                                <strong>Distance:</strong> {{ comp.distance }} miles from subject
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="ml-4 flex gap-2">

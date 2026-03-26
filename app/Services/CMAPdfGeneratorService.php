@@ -27,6 +27,10 @@ class CMAPdfGeneratorService
         $branding = $this->getBrandingSettings();
 
         // Prepare data for PDF
+        // Generate valuation summary and confidence score
+        $valuationSummary = $this->cmaService->generateValuationSummary($report);
+        $confidenceScore = $this->cmaService->calculateConfidenceScore($report);
+
         $data = [
             'report' => $report,
             'subject' => $comparisonData['subject'],
@@ -35,6 +39,8 @@ class CMAPdfGeneratorService
             'agent' => $report->user,
             'contact' => $report->contact,
             'generatedDate' => now()->format('F j, Y'),
+            'valuationSummary' => $valuationSummary,
+            'confidenceScore' => $confidenceScore,
         ];
 
         // Generate PDF

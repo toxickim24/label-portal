@@ -798,7 +798,7 @@ Build a Comparative Market Analysis (CMA) tool that allows agents to create prof
   - [x] Bedrooms / Bathrooms
   - [x] Sale price
   - [x] Sale date
-  - [ ] Distance from subject (not implemented)
+  - [x] Distance from subject (in miles)
   - [ ] Photos (deferred to Phase 5.1)
 - [ ] Search for comps (not in scope - no property database)
 - [x] Manual comp entry
@@ -811,7 +811,13 @@ Build a Comparative Market Analysis (CMA) tool that allows agents to create prof
 - [x] Add/subtract adjustments (backend calculates based on comp differences)
 - [x] Adjustment reasons/notes
 - [x] Auto-calculate adjusted prices
-- [x] Adjustments display UI (readonly view per comparable)
+- [x] Manual adjustments editing UI (full CRUD per comparable)
+  - [x] Add/edit/remove adjustment entries
+  - [x] Category, amount, and notes fields
+  - [x] Real-time total calculation
+  - [x] Color-coded amounts (green for positive, red for negative)
+  - [x] Adjusted price preview
+  - [x] Save/cancel workflow
 
 #### Price Per Square Foot ✅
 - [x] Calculate subject property $/sqft (backend)
@@ -825,15 +831,21 @@ Build a Comparative Market Analysis (CMA) tool that allows agents to create prof
   - [x] Average estimate
   - [x] High estimate
 - [x] Based on adjusted comp prices
-- [ ] Confidence score (enhancement - not implemented)
-- [ ] Valuation summary paragraph (not implemented)
+- [x] Confidence score algorithm (1-5 scale with detailed reasoning)
+  - [x] Multi-factor analysis (comparable count, price variance, sale recency, adjustment magnitude)
+  - [x] Textual confidence level (Low, Moderate, High, Very High)
+  - [x] Detailed reasons for score adjustments
+- [x] Auto-generated valuation summary paragraph
+  - [x] Contextual narrative based on data quality
+  - [x] Professional tone suitable for client reports
+  - [x] Market condition interpretation
 
 #### Comparison Table UI ✅
 - [x] Clean, professional display (list view with cards)
 - [x] Property comparison (all details displayed)
 - [ ] Sortable columns (not implemented - enhancement)
-- [ ] Editable fields inline (not implemented - using forms)
-- [ ] Color-coded adjustments (not implemented - enhancement)
+- [x] Editable adjustments UI with expandable forms
+- [x] Color-coded adjustments (green for positive, red for negative)
 - [x] Responsive design (fully mobile responsive)
 
 #### Branded PDF Output ✅
@@ -844,18 +856,21 @@ Build a Comparative Market Analysis (CMA) tool that allows agents to create prof
   - [x] Brand color (#B49106 gold)
   - [x] Prepared date
 - [x] Report sections:
-  - [x] Executive summary
+  - [x] Executive summary with:
+    - [x] Estimated market value display
+    - [x] Confidence score badge (color-coded by level)
+    - [x] Auto-generated valuation summary paragraph
   - [x] Subject property details
-  - [x] Comparable properties table
-  - [x] Adjustments breakdown
+  - [x] Comparable properties table (with distance column)
+  - [x] Adjustments breakdown (color-coded positive/negative)
   - [x] Price per sqft analysis
   - [x] Valuation range summary
 - [x] Footer with:
-  - [x] Tim McMullen photo, name, REALTOR® designation
+  - [x] Tim McMullen photo (base64 embedded), name, REALTOR® designation
   - [x] Contact information (email, phone)
   - [x] MLS disclaimer
   - [x] Page numbers
-- [x] Print-friendly layout (proper spacing, professional styling)
+- [x] Print-friendly layout (proper spacing, professional styling, left/right margins)
 
 #### Report Management ✅
 - [x] Save reports per client
@@ -891,17 +906,20 @@ cma_reports:
 ```
 
 ### Service Layer (Implemented)
-- **CMAService** ✅ - 22 methods for full CMA management
+- **CMAService** ✅ - 24 methods for full CMA management
   - createReport(), updateReport(), calculateValuation()
   - addComparable(), updateComparable(), removeComparable()
   - updateAdjustments(), finalizeReport(), unfinalizeReport()
   - duplicateReport(), archiveReport(), restoreReport()
   - getContactReports(), getUserReports()
   - calculatePricePerSquareFoot(), getComparisonData()
+  - **generateValuationSummary()** - Auto-generates professional narrative paragraph
+  - **calculateConfidenceScore()** - Multi-factor confidence analysis (1-5 scale)
 - **CMAPdfGeneratorService** ✅ - PDF generation and distribution
   - generatePdf(), downloadPdf(), viewPdf(), regeneratePdf()
   - emailPdf(), getPdfUrl()
   - DomPDF integration with branded templates
+  - Passes valuation summary and confidence score to PDF
 
 ### UI Components (Implemented)
 - **CMA/Index.vue** ✅ - List all CMA reports with filters, pagination, actions
@@ -930,6 +948,64 @@ cma_reports:
 - ✅ **Responsive Design** fully mobile-compatible
 - ✅ **Flash Messages** for user feedback
 - ✅ **Branded PDF Template** with McMullen Properties gold theme (#B49106)
+- ✅ **Searchable Client Dropdown** with live filtering (SearchableSelect.vue)
+- ✅ **Multi-Factor Confidence Algorithm** for valuation quality assessment
+- ✅ **AI-like Narrative Generation** for professional valuation summaries
+- ✅ **Distance Tracking** for comparable properties
+
+### Phase 5 Enhancement Summary
+
+**Final Enhancement Session (March 26, 2026)**:
+After initial Phase 5 completion, we identified and implemented critical missing features:
+
+#### ✅ Completed Enhancements:
+1. **Manual Adjustments Editing UI** (CRITICAL) - Full CRUD system for editing adjustments with:
+   - Add/edit/remove adjustment entries per comparable
+   - Category, amount, and notes fields
+   - Real-time total calculation and adjusted price preview
+   - Color-coded amounts (green for positive, red for negative)
+   - Save/cancel workflow
+   - Admin and draft-mode restrictions respected
+
+2. **Distance Calculation** - Added distance field (in miles) to comparable properties:
+   - Distance input in comp form
+   - Distance display in comp cards
+   - Distance column in PDF comparables table
+
+3. **Valuation Summary Paragraph** - Auto-generated professional narrative:
+   - Contextual language based on comparable count
+   - Market condition interpretation (tight/moderate/variable)
+   - Value range explanation
+   - Professional tone suitable for client reports
+   - Displayed in PDF Executive Summary section
+
+4. **Confidence Score Algorithm** - Multi-factor statistical analysis:
+   - 4 weighted factors: comparable count (30%), price variance (30%), sale recency (20%), adjustment magnitude (20%)
+   - 1-5 score scale with textual levels (Low, Moderate, High, Very High)
+   - Detailed reasoning for score adjustments
+   - Color-coded confidence badge in PDF (green/orange/red)
+   - Displayed in PDF Executive Summary section
+
+5. **PDF Template Updates**:
+   - Added confidence score badge with color coding
+   - Added valuation summary paragraph display
+   - Added distance column to comparables table
+   - Added "Very High" confidence CSS class
+   - Enhanced Executive Summary section
+
+#### 📊 Enhancement Statistics:
+- **New Service Methods**: 2 (generateValuationSummary, calculateConfidenceScore)
+- **Files Modified**: 5 (CMAService, CMAPdfGeneratorService, Edit.vue, cma-report.blade.php, PHASES.md)
+- **Lines of Code Added**: ~400+ lines
+- **UI Components Enhanced**: 1 (Edit.vue with full adjustments CRUD)
+- **PDF Sections Enhanced**: 2 (Executive Summary, Comparables Table)
+
+#### ⏭️ Deferred to Future Phases:
+- Photo uploads for subject property and comparables (complex feature, needs separate phase)
+- Comparable search from database (no property database exists)
+- Inline editing in comparison table (using form-based editing instead)
+
+**Result**: Phase 5 is now production-ready with all essential CMA features implemented, including professional PDF generation, intelligent valuation analysis, and comprehensive adjustments management.
 
 ---
 

@@ -103,6 +103,138 @@ class CMAService
     }
 
     /**
+     * Generate valuation summary paragraph
+     */
+    public function generateValuationSummary(CMAReport $report): string
+    {
+        $comparableCount = count($report->comparables ?? []);
+        $avgValue = number_format($report->valuation_avg, 0);
+        $lowValue = number_format($report->valuation_low, 0);
+        $highValue = number_format($report->valuation_high, 0);
+        $address = $report->subject_property['address'] ?? 'the subject property';
+
+        if ($comparableCount === 0) {
+            return "No comparable properties have been added to this analysis yet.";
+        }
+
+        $summary = "Based on a comprehensive analysis of {$comparableCount} comparable " .
+                   ($comparableCount === 1 ? 'property' : 'properties') .
+                   " in the surrounding area, the estimated market value for {$address} is \${$avgValue}. ";
+
+        $summary .= "The valuation range spans from a low estimate of \${$lowValue} to a high estimate of \${$highValue}, ";
+
+        $range = $report->valuation_high - $report->valuation_low;
+        $rangePercent = round(($range / $report->valuation_avg) * 100, 1);
+
+        if ($rangePercent < 10) {
+            $summary .= "indicating a tight market consensus with strong pricing confidence. ";
+        } elseif ($rangePercent < 20) {
+            $summary .= "reflecting a moderate range typical of stable market conditions. ";
+        } else {
+            $summary .= "suggesting some market variability that should be considered in pricing decisions. ";
+        }
+
+        $summary .= "This valuation takes into account property characteristics, location factors, condition differences, and recent market activity.";
+
+        return $summary;
+    }
+
+    /**
+     * Calculate confidence score for the valuation (1-5 scale)
+     */
+    public function calculateConfidenceScore(CMAReport $report): array
+    {
+        $score = 5.0; // Start at maximum
+        $reasons = [];
+
+        $comparableCount = count($report->comparables ?? []);
+
+        // Factor 1: Number of comparables (weight: 30%)
+        if ($comparableCount < 3) {
+            $score -= 1.5;
+            $reasons[] = "Limited number of comparables ({$comparableCount})";
+        } elseif ($comparableCount < 5) {
+            $score -= 0.5;
+            $reasons[] = "Moderate number of comparables ({$comparableCount})";
+        }
+
+        // Factor 2: Price variance (weight: 30%)
+        if ($report->valuation_avg > 0) {
+            $range = $report->valuation_high - $report->valuation_low;
+            $variance = ($range / $report->valuation_avg) * 100;
+
+            if ($variance > 30) {
+                $score -= 1.5;
+                $reasons[] = "High price variance (" . round($variance, 1) . "%)";
+            } elseif ($variance > 15) {
+                $score -= 0.5;
+                $reasons[] = "Moderate price variance (" . round($variance, 1) . "%)";
+            }
+        }
+
+        // Factor 3: Recency of sales (weight: 20%)
+        $recentSales = 0;
+        $sixMonthsAgo = now()->subMonths(6);
+
+        foreach ($report->comparables ?? [] as $comp) {
+            if (!empty($comp['sale_date'])) {
+                $saleDate = \Carbon\Carbon::parse($comp['sale_date']);
+                if ($saleDate->gte($sixMonthsAgo)) {
+                    $recentSales++;
+                }
+            }
+        }
+
+        if ($comparableCount > 0) {
+            $recencyRatio = $recentSales / $comparableCount;
+            if ($recencyRatio < 0.3) {
+                $score -= 1.0;
+                $reasons[] = "Most comparables are older than 6 months";
+            } elseif ($recencyRatio < 0.6) {
+                $score -= 0.3;
+            }
+        }
+
+        // Factor 4: Adjustments magnitude (weight: 20%)
+        $largeAdjustments = 0;
+        foreach ($report->comparables ?? [] as $index => $comp) {
+            $adjustments = $report->adjustments[$index] ?? [];
+            $totalAdj = 0;
+            foreach ($adjustments as $adj) {
+                $totalAdj += abs((float) ($adj['amount'] ?? 0));
+            }
+            $salePrice = (float) ($comp['sale_price'] ?? 1);
+            if ($salePrice > 0 && ($totalAdj / $salePrice) > 0.15) {
+                $largeAdjustments++;
+            }
+        }
+
+        if ($largeAdjustments > 0) {
+            $score -= ($largeAdjustments * 0.3);
+            $reasons[] = "{$largeAdjustments} comparable(s) required significant adjustments";
+        }
+
+        // Ensure score stays within 1-5 range
+        $score = max(1.0, min(5.0, $score));
+
+        // Determine confidence level
+        $level = 'Very High';
+        if ($score < 2.5) {
+            $level = 'Low';
+        } elseif ($score < 3.5) {
+            $level = 'Moderate';
+        } elseif ($score < 4.5) {
+            $level = 'High';
+        }
+
+        return [
+            'score' => round($score, 1),
+            'level' => $level,
+            'reasons' => $reasons,
+        ];
+    }
+
+    /**
      * Calculate price per square foot for a property
      */
     public function calculatePricePerSquareFoot(float $price, float $squareFeet): ?float
