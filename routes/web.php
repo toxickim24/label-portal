@@ -8,6 +8,7 @@ use App\Http\Controllers\ContactNoteController;
 use App\Http\Controllers\ContactTagController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\ClientInvitationController;
+use App\Http\Controllers\CMAReportController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -69,6 +70,19 @@ Route::middleware(['auth', 'approved'])->group(function () {
     Route::post('imports/{import}/cancel', [ImportController::class, 'cancel'])->name('imports.cancel');
     Route::get('imports/{import}/failed-rows', [ImportController::class, 'downloadFailedRows'])->name('imports.failed-rows');
     Route::delete('imports/{import}', [ImportController::class, 'destroy'])->name('imports.destroy');
+
+    // CMA Report Management
+    Route::resource('cma', CMAReportController::class);
+    Route::post('cma/{cma}/comparable', [CMAReportController::class, 'addComparable'])->name('cma.comparable.add');
+    Route::put('cma/{cma}/comparable/{index}', [CMAReportController::class, 'updateComparable'])->name('cma.comparable.update');
+    Route::delete('cma/{cma}/comparable/{index}', [CMAReportController::class, 'removeComparable'])->name('cma.comparable.remove');
+    Route::put('cma/{cma}/adjustments/{index}', [CMAReportController::class, 'updateAdjustments'])->name('cma.adjustments.update');
+    Route::post('cma/{cma}/finalize', [CMAReportController::class, 'finalize'])->name('cma.finalize');
+    Route::post('cma/{cma}/duplicate', [CMAReportController::class, 'duplicate'])->name('cma.duplicate');
+    Route::post('cma/{cma}/generate-pdf', [CMAReportController::class, 'generatePdf'])->name('cma.generate-pdf');
+    Route::get('cma/{cma}/download-pdf', [CMAReportController::class, 'downloadPdf'])->name('cma.download-pdf');
+    Route::get('cma/{cma}/view-pdf', [CMAReportController::class, 'viewPdf'])->name('cma.view-pdf');
+    Route::post('cma/{cma}/email-pdf', [CMAReportController::class, 'emailPdf'])->name('cma.email-pdf');
 });
 
 // Admin routes

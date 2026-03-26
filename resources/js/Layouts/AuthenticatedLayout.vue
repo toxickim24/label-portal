@@ -57,6 +57,14 @@ const showingNavigationDropdown = ref(false);
                                     Import
                                 </NavLink>
 
+                                <!-- CMA Reports Navigation -->
+                                <NavLink
+                                    :href="route('cma.index')"
+                                    :active="route().current('cma.*')"
+                                >
+                                    CMA Reports
+                                </NavLink>
+
                                 <!-- Admin Navigation -->
                                 <NavLink
                                     v-if="$page.props.auth.user.roles?.some(role => role.name === 'admin')"
@@ -197,6 +205,14 @@ const showingNavigationDropdown = ref(false);
                             :active="route().current('imports.*')"
                         >
                             Import
+                        </ResponsiveNavLink>
+
+                        <!-- CMA Reports Navigation (Mobile) -->
+                        <ResponsiveNavLink
+                            :href="route('cma.index')"
+                            :active="route().current('cma.*')"
+                        >
+                            CMA Reports
                         </ResponsiveNavLink>
 
                         <!-- Admin Navigation (Mobile) -->
