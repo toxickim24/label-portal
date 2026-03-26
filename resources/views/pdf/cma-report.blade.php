@@ -14,6 +14,11 @@
             font-size: 11pt;
             line-height: 1.5;
             color: #333;
+            padding-bottom: 100px;
+        }
+        .content-wrapper {
+            padding-left: 40px;
+            padding-right: 40px;
         }
         .header {
             background-color: #B49106;
@@ -131,6 +136,8 @@
             height: 60px;
             border-radius: 50%;
             border: 2px solid white;
+            object-fit: cover;
+            display: block;
         }
         .page-number:after {
             content: counter(page);
@@ -158,6 +165,7 @@
         <div class="subtitle">Prepared: {{ $generatedDate }}</div>
     </div>
 
+    <div class="content-wrapper">
     <!-- Executive Summary -->
     <div class="section">
         <h2 class="section-title">Executive Summary</h2>
@@ -339,11 +347,14 @@
     <div class="disclaimer">
         <strong>Disclaimer:</strong> This Comparative Market Analysis is an opinion of value and is not an appraisal. The estimated value is based on recent comparable sales and current market conditions. Actual market value may vary based on market changes, property condition, and other factors. This report is intended for informational purposes only and should not be used as the sole basis for any financial or real estate decisions.
     </div>
+    </div><!-- End content-wrapper -->
 
     <div class="footer">
         <div class="footer-content">
             <div class="footer-left">
-                <img src="{{ public_path('tim-mcmullen.png') }}" alt="Tim McMullen" class="footer-agent-photo">
+                @if(file_exists(public_path('images/tim-mcmullen.png')))
+                <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('images/tim-mcmullen.png'))) }}" alt="Tim McMullen" class="footer-agent-photo">
+                @endif
             </div>
             <div class="footer-center">
                 <div style="font-weight: bold; margin-bottom: 3px;">Tim McMullen · REALTOR®</div>
