@@ -202,6 +202,22 @@ class CMAService
     }
 
     /**
+     * Unfinalize the report (convert back to draft) - Admin only
+     */
+    public function unfinalizeReport(CMAReport $report): CMAReport
+    {
+        $report->update(['status' => 'draft']);
+
+        // Log activity
+        activity()
+            ->performedOn($report)
+            ->causedBy(auth()->user())
+            ->log('CMA report converted back to draft');
+
+        return $report->fresh();
+    }
+
+    /**
      * Duplicate an existing report
      */
     public function duplicateReport(CMAReport $report): CMAReport

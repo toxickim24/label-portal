@@ -233,6 +233,21 @@ class CMAReportController extends Controller
     }
 
     /**
+     * Unfinalize the report (convert back to draft) - Admin only
+     */
+    public function unfinalize(CMAReport $cma): RedirectResponse
+    {
+        // Check if user is admin
+        if (!auth()->user()->hasRole('admin')) {
+            abort(403, 'Only administrators can convert finalized reports back to draft.');
+        }
+
+        $this->cmaService->unfinalizeReport($cma);
+
+        return back()->with('success', 'CMA report converted back to draft successfully.');
+    }
+
+    /**
      * Duplicate report
      */
     public function duplicate(CMAReport $cma): RedirectResponse

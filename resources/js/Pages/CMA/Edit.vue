@@ -1,10 +1,12 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { Head, Link, useForm, router } from '@inertiajs/vue3';
+import { Head, Link, useForm, router, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+
+const $page = usePage();
 
 const props = defineProps({
     report: Object,
@@ -67,9 +69,25 @@ const downloadPdf = () => {
 
 const emailPdf = () => {
     if (confirm('Send this report to the client via email?')) {
-        router.post(route('cma.email-pdf', props.report.id));
+        router.post(route('cma.email-pdf', props.report.id), {}, {
+            preserveScroll: true,
+        });
     }
 };
+
+const unfinalize = () => {
+    if (confirm('Convert this finalized report back to draft? This will allow editing.')) {
+        router.post(route('cma.unfinalize', props.report.id));
+    }
+};
+
+const isAdmin = computed(() => {
+    return $page.props.auth.user.roles?.some(role => role.name === 'admin') || false;
+});
+
+const canEdit = computed(() => {
+    return props.report.status === 'draft' || isAdmin.value;
+});
 
 const comparables = computed(() => props.report.comparables || []);
 </script>
@@ -148,6 +166,13 @@ const comparables = computed(() => props.report.comparables || []);
                                 Finalize Report
                             </button>
                             <button
+                                v-if="report.status === 'finalized' && isAdmin"
+                                @click="unfinalize"
+                                class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700"
+                            >
+                                Convert to Draft
+                            </button>
+                            <button
                                 @click="generatePdf"
                                 class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
                             >
@@ -168,6 +193,9 @@ const comparables = computed(() => props.report.comparables || []);
                                 Email to Client
                             </button>
                         </div>
+                        <p v-if="report.status === 'finalized' && isAdmin" class="mt-3 text-sm text-yellow-600 dark:text-yellow-400">
+                            <strong>Admin:</strong> You can edit this finalized report. Regular users cannot edit finalized reports.
+                        </p>
                     </div>
                 </div>
 
@@ -206,7 +234,7 @@ const comparables = computed(() => props.report.comparables || []);
                                 Comparable Properties ({{ comparables.length }})
                             </h3>
                             <button
-                                v-if="report.status === 'draft' && !showComparableForm"
+                                v-if="canEdit && !showComparableForm"
                                 @click="showComparableForm = true"
                                 class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
                             >
@@ -317,7 +345,7 @@ const comparables = computed(() => props.report.comparables || []);
                                         </div>
                                     </div>
                                     <button
-                                        v-if="report.status === 'draft'"
+                                        v-if="canEdit"
                                         @click="removeComparable(index)"
                                         class="ml-4 px-3 py-1 text-sm bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded hover:bg-red-200 dark:hover:bg-red-800"
                                     >

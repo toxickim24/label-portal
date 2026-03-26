@@ -78,6 +78,7 @@ Route::middleware(['auth', 'approved'])->group(function () {
     Route::delete('cma/{cma}/comparable/{index}', [CMAReportController::class, 'removeComparable'])->name('cma.comparable.remove');
     Route::put('cma/{cma}/adjustments/{index}', [CMAReportController::class, 'updateAdjustments'])->name('cma.adjustments.update');
     Route::post('cma/{cma}/finalize', [CMAReportController::class, 'finalize'])->name('cma.finalize');
+    Route::post('cma/{cma}/unfinalize', [CMAReportController::class, 'unfinalize'])->name('cma.unfinalize');
     Route::post('cma/{cma}/duplicate', [CMAReportController::class, 'duplicate'])->name('cma.duplicate');
     Route::post('cma/{cma}/generate-pdf', [CMAReportController::class, 'generatePdf'])->name('cma.generate-pdf');
     Route::get('cma/{cma}/download-pdf', [CMAReportController::class, 'downloadPdf'])->name('cma.download-pdf');
