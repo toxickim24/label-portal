@@ -70,19 +70,19 @@ const downloadPdf = (reportId) => {
                             Subject Property
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="text-sm">
+                            <div class="text-sm text-gray-900 dark:text-gray-100">
                                 <span class="font-semibold">Address:</span>
                                 {{ report.subject_property?.address || 'N/A' }}
                             </div>
-                            <div class="text-sm">
+                            <div class="text-sm text-gray-900 dark:text-gray-100">
                                 <span class="font-semibold">Square Feet:</span>
                                 {{ report.subject_property?.square_feet ? Number(report.subject_property.square_feet).toLocaleString() : 'N/A' }}
                             </div>
-                            <div class="text-sm">
+                            <div class="text-sm text-gray-900 dark:text-gray-100">
                                 <span class="font-semibold">Bedrooms:</span>
                                 {{ report.subject_property?.bedrooms || 'N/A' }}
                             </div>
-                            <div class="text-sm">
+                            <div class="text-sm text-gray-900 dark:text-gray-100">
                                 <span class="font-semibold">Bathrooms:</span>
                                 {{ report.subject_property?.bathrooms || 'N/A' }}
                             </div>

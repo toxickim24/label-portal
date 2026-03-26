@@ -16,7 +16,7 @@
             color: #333;
         }
         .header {
-            background-color: #4F46E5;
+            background-color: #B49106;
             color: white;
             padding: 30px 40px;
             margin-bottom: 30px;
@@ -36,8 +36,8 @@
         .section-title {
             font-size: 16pt;
             font-weight: bold;
-            color: #4F46E5;
-            border-bottom: 2px solid #4F46E5;
+            color: #B49106;
+            border-bottom: 2px solid #B49106;
             padding-bottom: 5px;
             margin-bottom: 15px;
         }
@@ -64,7 +64,7 @@
             margin-top: 15px;
         }
         .comparables-table th {
-            background-color: #4F46E5;
+            background-color: #B49106;
             color: white;
             padding: 10px;
             text-align: left;
@@ -79,8 +79,8 @@
             background-color: #f9fafb;
         }
         .valuation-box {
-            background-color: #EEF2FF;
-            border: 2px solid #4F46E5;
+            background-color: #FFFBEB;
+            border: 2px solid #B49106;
             border-radius: 8px;
             padding: 25px;
             text-align: center;
@@ -89,7 +89,7 @@
         .valuation-box .main-value {
             font-size: 32pt;
             font-weight: bold;
-            color: #4F46E5;
+            color: #B49106;
             margin: 10px 0;
         }
         .valuation-box .range {
@@ -101,11 +101,36 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background-color: #f9fafb;
-            padding: 15px 40px;
-            border-top: 1px solid #e5e7eb;
+            background-color: #B49106;
+            color: white;
+            padding: 20px 40px;
+            border-top: 3px solid #8B7005;
             font-size: 9pt;
-            color: #6b7280;
+        }
+        .footer-content {
+            display: table;
+            width: 100%;
+        }
+        .footer-left {
+            display: table-cell;
+            vertical-align: middle;
+            width: 80px;
+        }
+        .footer-center {
+            display: table-cell;
+            vertical-align: middle;
+            padding-left: 15px;
+        }
+        .footer-right {
+            display: table-cell;
+            vertical-align: middle;
+            text-align: right;
+        }
+        .footer-agent-photo {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 2px solid white;
         }
         .page-number:after {
             content: counter(page);
@@ -275,9 +300,9 @@
                 <td style="padding: 15px; border: 1px solid #e5e7eb;"><strong>Low Estimate:</strong></td>
                 <td style="padding: 15px; border: 1px solid #e5e7eb; text-align: right;">${{ number_format($report->valuation_low, 0) }}</td>
             </tr>
-            <tr style="background-color: #EEF2FF;">
+            <tr style="background-color: #FFFBEB;">
                 <td style="padding: 15px; border: 1px solid #e5e7eb;"><strong>Average Estimate:</strong></td>
-                <td style="padding: 15px; border: 1px solid #e5e7eb; text-align: right; font-size: 14pt; color: #4F46E5;"><strong>${{ number_format($report->valuation_avg, 0) }}</strong></td>
+                <td style="padding: 15px; border: 1px solid #e5e7eb; text-align: right; font-size: 14pt; color: #B49106;"><strong>${{ number_format($report->valuation_avg, 0) }}</strong></td>
             </tr>
             <tr style="background-color: #f9fafb;">
                 <td style="padding: 15px; border: 1px solid #e5e7eb;"><strong>High Estimate:</strong></td>
@@ -316,9 +341,20 @@
     </div>
 
     <div class="footer">
-        <div style="float: left;">{{ $branding['app_name'] ?? config('app.name') }}</div>
-        <div style="float: right;">Page <span class="page-number"></span></div>
-        <div style="clear: both;"></div>
+        <div class="footer-content">
+            <div class="footer-left">
+                <img src="{{ public_path('tim-mcmullen.png') }}" alt="Tim McMullen" class="footer-agent-photo">
+            </div>
+            <div class="footer-center">
+                <div style="font-weight: bold; margin-bottom: 3px;">Tim McMullen · REALTOR®</div>
+                <div style="margin-bottom: 3px;">McMullen Properties</div>
+                <div style="margin-bottom: 3px;">tim@mcmullen.properties · 415.691.9272</div>
+                <div style="font-size: 8pt; opacity: 0.9; margin-top: 5px;">Information derived from public records and MLS data. Measurements are approximate and not guaranteed.</div>
+            </div>
+            <div class="footer-right">
+                Page <span class="page-number"></span>
+            </div>
+        </div>
     </div>
 </body>
 </html>

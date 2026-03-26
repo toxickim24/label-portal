@@ -102,6 +102,22 @@ const comparables = computed(() => props.report.comparables || []);
 
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+                <!-- Success Message -->
+                <div
+                    v-if="$page.props.flash?.success"
+                    class="rounded-lg bg-green-50 p-4 text-sm text-green-800 dark:bg-green-900/20 dark:text-green-400"
+                >
+                    {{ $page.props.flash.success }}
+                </div>
+
+                <!-- Error Message -->
+                <div
+                    v-if="$page.props.flash?.error"
+                    class="rounded-lg bg-red-50 p-4 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-400"
+                >
+                    {{ $page.props.flash.error }}
+                </div>
+
                 <!-- Valuation Summary -->
                 <div v-if="report.valuation_avg" class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 text-center">
@@ -161,7 +177,7 @@ const comparables = computed(() => props.report.comparables || []);
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                             Subject Property
                         </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-900 dark:text-gray-100">
                             <div>
                                 <span class="font-semibold">Address:</span>
                                 {{ report.subject_property?.address || 'N/A' }}
