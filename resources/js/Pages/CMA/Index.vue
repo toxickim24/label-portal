@@ -1,10 +1,16 @@
 <script setup>
-import { ref } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+
+const $page = usePage();
 
 defineProps({
     reports: Object,
+});
+
+const isAdmin = computed(() => {
+    return $page.props.auth.user.roles?.some(role => role.name === 'admin') || false;
 });
 
 const deleteReport = (report) => {
@@ -97,7 +103,7 @@ const downloadPdf = (report) => {
                                             View
                                         </Link>
                                         <Link
-                                            v-if="report.status === 'draft'"
+                                            v-if="report.status === 'draft' || isAdmin"
                                             :href="route('cma.edit', report.id)"
                                             class="px-3 py-1 text-sm bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 rounded hover:bg-indigo-200 dark:hover:bg-indigo-800"
                                         >
