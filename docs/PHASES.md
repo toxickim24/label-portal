@@ -764,147 +764,172 @@ Create a dedicated client-facing portal where real estate clients can log in, vi
 
 ---
 
-## Phase 5: CMA Report Builder 📊 PLANNED
+## Phase 5: CMA Report Builder ✅ COMPLETED
 
-**Status**: 📊 Planned
+**Status**: ✅ Complete
+**Completion Date**: March 26, 2026
+**Version**: 5.0.0
 **Priority**: Medium
 
 ### Objectives
 Build a Comparative Market Analysis (CMA) tool that allows agents to create professional, branded property valuation reports for clients.
 
-### Planned Features
+### Completed Features
 
-#### Subject Property
-- [ ] Enter subject property details:
-  - Address
-  - Square footage
-  - Bedrooms / Bathrooms
-  - Lot size
-  - Year built
-  - Property type
-  - Features/amenities
-  - Photos
-- [ ] Property detail form
-- [ ] Image upload
-- [ ] Save as draft
+#### Subject Property ✅
+- [x] Enter subject property details:
+  - [x] Address
+  - [x] Square footage
+  - [x] Bedrooms / Bathrooms
+  - [x] Lot size
+  - [x] Year built
+  - [x] Property type
+  - [ ] Features/amenities (not implemented)
+  - [ ] Photos (deferred to Phase 5.1)
+- [x] Property detail form
+- [ ] Image upload (deferred to Phase 5.1)
+- [x] Save as draft
 
-#### Comparable Properties (Comps)
-- [ ] Add multiple comparable properties
-- [ ] Comp fields:
-  - Address
-  - Square footage
-  - Bedrooms / Bathrooms
-  - Sale price
-  - Sale date
-  - Distance from subject
-  - Photos
-- [ ] Search for comps (if property database exists)
-- [ ] Manual comp entry
-- [ ] Minimum 3 comps recommended
-- [ ] Remove/edit comps
+#### Comparable Properties (Comps) ✅
+- [x] Add multiple comparable properties
+- [x] Comp fields:
+  - [x] Address
+  - [x] Square footage
+  - [x] Bedrooms / Bathrooms
+  - [x] Sale price
+  - [x] Sale date
+  - [ ] Distance from subject (not implemented)
+  - [ ] Photos (deferred to Phase 5.1)
+- [ ] Search for comps (not in scope - no property database)
+- [x] Manual comp entry
+- [x] Minimum 3 comps recommended (UI guidance)
+- [x] Remove/edit comps
 
-#### Adjustments System
-- [ ] Adjustment calculator
-- [ ] Adjustment categories:
-  - Size differential
-  - Condition
-  - Location
-  - Age
-  - Features (pool, garage, etc.)
-  - Market conditions
-- [ ] Add/subtract adjustments
-- [ ] Adjustment reasons/notes
-- [ ] Auto-calculate adjusted prices
+#### Adjustments System ✅
+- [x] Adjustment calculator (automatic backend calculation)
+- [x] Adjustment categories (flexible JSON storage)
+- [x] Add/subtract adjustments (backend calculates based on comp differences)
+- [x] Adjustment reasons/notes
+- [x] Auto-calculate adjusted prices
+- [x] Adjustments display UI (readonly view per comparable)
 
-#### Price Per Square Foot
-- [ ] Calculate subject property $/sqft
-- [ ] Calculate comp $/sqft
-- [ ] Show $/sqft comparison
-- [ ] Highlight outliers
+#### Price Per Square Foot ✅
+- [x] Calculate subject property $/sqft (backend)
+- [x] Calculate comp $/sqft (backend)
+- [x] Show $/sqft comparison (in reports)
+- [ ] Highlight outliers (not implemented)
 
-#### Valuation Range
-- [ ] Calculate suggested value range:
-  - Low estimate
-  - Average estimate
-  - High estimate
-- [ ] Based on adjusted comp prices
-- [ ] Confidence score
-- [ ] Valuation summary paragraph
+#### Valuation Range ✅
+- [x] Calculate suggested value range:
+  - [x] Low estimate
+  - [x] Average estimate
+  - [x] High estimate
+- [x] Based on adjusted comp prices
+- [ ] Confidence score (enhancement - not implemented)
+- [ ] Valuation summary paragraph (not implemented)
 
-#### Comparison Table UI
-- [ ] Clean, professional table
-- [ ] Side-by-side property comparison
-- [ ] Sortable columns
-- [ ] Editable fields inline
-- [ ] Color-coded adjustments
-- [ ] Responsive design
+#### Comparison Table UI ✅
+- [x] Clean, professional display (list view with cards)
+- [x] Property comparison (all details displayed)
+- [ ] Sortable columns (not implemented - enhancement)
+- [ ] Editable fields inline (not implemented - using forms)
+- [ ] Color-coded adjustments (not implemented - enhancement)
+- [x] Responsive design (fully mobile responsive)
 
-#### Branded PDF Output
-- [ ] Generate PDF report
-- [ ] Include uploaded logos (light/dark)
-- [ ] Professional header with:
-  - Company logo
-  - Company name
-  - Agent name, photo, contact
-- [ ] Report sections:
-  - Executive summary
-  - Subject property details
-  - Comparable properties table
-  - Adjustments breakdown
-  - Price per sqft analysis
-  - Valuation range summary
-- [ ] Footer with disclaimers
-- [ ] Page numbers
-- [ ] Print-friendly layout
+#### Branded PDF Output ✅
+- [x] Generate PDF report (DomPDF integration)
+- [x] Include uploaded logos (McMullen Properties branding)
+- [x] Professional header with:
+  - [x] Company name (McMullen Properties)
+  - [x] Brand color (#B49106 gold)
+  - [x] Prepared date
+- [x] Report sections:
+  - [x] Executive summary
+  - [x] Subject property details
+  - [x] Comparable properties table
+  - [x] Adjustments breakdown
+  - [x] Price per sqft analysis
+  - [x] Valuation range summary
+- [x] Footer with:
+  - [x] Tim McMullen photo, name, REALTOR® designation
+  - [x] Contact information (email, phone)
+  - [x] MLS disclaimer
+  - [x] Page numbers
+- [x] Print-friendly layout (proper spacing, professional styling)
 
-#### Report Management
-- [ ] Save reports per client
-- [ ] Associate report with contact
-- [ ] View report history
-- [ ] Edit existing reports
-- [ ] Duplicate/template reports
-- [ ] Archive old reports
-- [ ] Share report via email
-- [ ] Download PDF
+#### Report Management ✅
+- [x] Save reports per client
+- [x] Associate report with contact (optional)
+- [x] View report history (index page with pagination)
+- [x] Edit existing reports (drafts by all, finalized by admin only)
+- [x] Duplicate/template reports
+- [x] Archive old reports (soft delete)
+- [x] Share report via email (with PDF attachment)
+- [x] Download PDF
+- [x] Draft/Finalized workflow
+- [x] Admin can unfinalize reports
+- [x] Activity logging (Spatie Activity Log)
 
-### Database Schema
+### Database Schema (Implemented)
 ```
 cma_reports:
   - id
-  - contact_id (client this report is for)
-  - user_id (agent who created)
-  - subject_property (JSON: address, sqft, beds, baths, etc.)
-  - comparables (JSON: array of comp properties)
-  - adjustments (JSON: adjustment data)
-  - valuation_low
-  - valuation_avg
-  - valuation_high
-  - status (draft, finalized)
-  - generated_pdf_path
+  - contact_id (nullable, foreign key to contacts)
+  - user_id (foreign key to users - agent who created)
+  - title (report title)
+  - subject_property (JSON: address, sqft, beds, baths, lot_size, year_built, property_type)
+  - comparables (JSON: array of comp properties with all details)
+  - adjustments (JSON: adjustment data per comparable)
+  - valuation_low (decimal)
+  - valuation_avg (decimal)
+  - valuation_high (decimal)
+  - status (enum: draft, finalized)
+  - generated_pdf_path (nullable)
+  - notes (text, nullable)
   - timestamps
+  - soft_deletes
 ```
 
-### Service Layer
-- CMAService (create, calculate, generate)
-- CMAPdfGeneratorService (PDF creation with logos)
-- PropertyAdjustmentService (adjustment calculations)
+### Service Layer (Implemented)
+- **CMAService** ✅ - 22 methods for full CMA management
+  - createReport(), updateReport(), calculateValuation()
+  - addComparable(), updateComparable(), removeComparable()
+  - updateAdjustments(), finalizeReport(), unfinalizeReport()
+  - duplicateReport(), archiveReport(), restoreReport()
+  - getContactReports(), getUserReports()
+  - calculatePricePerSquareFoot(), getComparisonData()
+- **CMAPdfGeneratorService** ✅ - PDF generation and distribution
+  - generatePdf(), downloadPdf(), viewPdf(), regeneratePdf()
+  - emailPdf(), getPdfUrl()
+  - DomPDF integration with branded templates
 
-### UI Components
-- CMABuilder.vue
-- SubjectPropertyForm.vue
-- ComparablesList.vue
-- ComparableForm.vue
-- AdjustmentsTable.vue
-- ValuationSummary.vue
-- CMAPdfPreview.vue
-- CMAHistory.vue
+### UI Components (Implemented)
+- **CMA/Index.vue** ✅ - List all CMA reports with filters, pagination, actions
+- **CMA/Create.vue** ✅ - Create new report with subject property form
+- **CMA/Edit.vue** ✅ - Full CMA builder with:
+  - Valuation summary display
+  - Report actions (finalize, generate PDF, email, download)
+  - Subject property display
+  - Comparable properties management (add/edit/remove)
+  - Adjustments display per comparable
+  - Admin override for finalized reports
+- **CMA/Show.vue** ✅ - View finalized CMA reports (readonly)
+- **SearchableSelect.vue** ✅ - Reusable searchable dropdown for client selection
 
-### Technical Requirements
-- PDF library (Laravel DomPDF or Snappy)
-- Logo embedding in PDF
-- Mathematical calculations
-- File storage for generated PDFs
-- Email delivery for sharing
+### Technical Achievements
+- ✅ **DomPDF Integration** (`barryvdh/laravel-dompdf` v3.1)
+- ✅ **Base64 Image Embedding** for reliable PDF photo display
+- ✅ **Automatic Valuation Calculations** based on comparable adjustments
+- ✅ **Price Per Square Foot** calculations
+- ✅ **File Storage** in `storage/app/cma-reports/`
+- ✅ **Email Delivery** with PDF attachments (CMAReportMail)
+- ✅ **Soft Delete** for archiving reports
+- ✅ **Activity Logging** (Spatie Activity Log)
+- ✅ **Admin Authorization** for editing finalized reports
+- ✅ **Dark Mode Support** throughout all CMA pages
+- ✅ **Responsive Design** fully mobile-compatible
+- ✅ **Flash Messages** for user feedback
+- ✅ **Branded PDF Template** with McMullen Properties gold theme (#B49106)
 
 ---
 
@@ -1278,15 +1303,15 @@ scheduled_reports:
 | 2.0.0 | Phase 2 | Mar 24, 2026 | ✅ Complete | CRM Contacts |
 | 3.0.0 | Phase 3 | Mar 25, 2026 | ✅ Complete | CSV Import Manager |
 | 4.0.0 | Phase 4 | Mar 25, 2026 | ✅ Complete | Client Portal (Production Ready) |
-| 5.0.0 | Phase 5 | TBD | 📊 Planned | CMA Report Builder |
+| 5.0.0 | Phase 5 | Mar 26, 2026 | ✅ Complete | CMA Report Builder |
 | 6.0.0 | Phase 6 | TBD | 🔌 Planned | API & Integrations |
 | 7.0.0 | Phase 7 | TBD | 📈 Planned | Analytics Dashboard |
 
 ---
 
 **Document Status**: Living Document
-**Last Updated**: March 25, 2026
-**Next Review**: Before Phase 5 Start
+**Last Updated**: March 26, 2026
+**Next Review**: Before Phase 6 Start
 **Maintained By**: Development Team
 
 **⚠️ CRITICAL REMINDER**: Each phase must be completed, reviewed, and approved before starting the next phase. NO phase skipping or combining allowed.

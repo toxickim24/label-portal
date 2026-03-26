@@ -89,6 +89,12 @@ const canEdit = computed(() => {
     return props.report.status === 'draft' || isAdmin.value;
 });
 
+const showingAdjustments = ref(null);
+
+const toggleAdjustments = (index) => {
+    showingAdjustments.value = showingAdjustments.value === index ? null : index;
+};
+
 const comparables = computed(() => props.report.comparables || []);
 </script>
 
@@ -344,13 +350,61 @@ const comparables = computed(() => props.report.comparables || []);
                                             <strong>Sale Date:</strong> {{ new Date(comp.sale_date).toLocaleDateString() }}
                                         </div>
                                     </div>
-                                    <button
-                                        v-if="canEdit"
-                                        @click="removeComparable(index)"
-                                        class="ml-4 px-3 py-1 text-sm bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded hover:bg-red-200 dark:hover:bg-red-800"
-                                    >
-                                        Remove
-                                    </button>
+                                    <div class="ml-4 flex gap-2">
+                                        <button
+                                            v-if="canEdit"
+                                            @click="toggleAdjustments(index)"
+                                            class="px-3 py-1 text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800"
+                                        >
+                                            {{ showingAdjustments === index ? 'Hide' : 'Adjustments' }}
+                                        </button>
+                                        <button
+                                            v-if="canEdit"
+                                            @click="removeComparable(index)"
+                                            class="px-3 py-1 text-sm bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded hover:bg-red-200 dark:hover:bg-red-800"
+                                        >
+                                            Remove
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Adjustments Section -->
+                                <div v-if="showingAdjustments === index" class="mt-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border-l-4 border-blue-500">
+                                    <h5 class="font-semibold text-gray-900 dark:text-gray-100 mb-3">Price Adjustments</h5>
+                                    <div class="space-y-3">
+                                        <div v-for="(adj, adjIndex) in (report.adjustments && report.adjustments[index]) || []" :key="adjIndex" class="flex gap-3 items-start">
+                                            <div class="flex-1">
+                                                <input
+                                                    v-model="adj.category"
+                                                    type="text"
+                                                    placeholder="Category (e.g., Size, Condition, Location)"
+                                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md text-sm"
+                                                    readonly
+                                                />
+                                            </div>
+                                            <div class="w-32">
+                                                <input
+                                                    v-model="adj.amount"
+                                                    type="number"
+                                                    placeholder="Amount"
+                                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md text-sm"
+                                                    readonly
+                                                />
+                                            </div>
+                                            <div class="flex-1">
+                                                <input
+                                                    v-model="adj.notes"
+                                                    type="text"
+                                                    placeholder="Notes"
+                                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md text-sm"
+                                                    readonly
+                                                />
+                                            </div>
+                                        </div>
+                                        <div v-if="!report.adjustments || !report.adjustments[index] || report.adjustments[index].length === 0" class="text-sm text-gray-500 dark:text-gray-400 italic">
+                                            No adjustments yet. Adjustments are calculated automatically based on property differences.
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
